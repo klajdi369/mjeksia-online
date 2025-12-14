@@ -1,4 +1,3 @@
-// constants/theme.ts
 import { vars } from "nativewind";
 
 export const NAV_THEME = {
@@ -52,3 +51,10 @@ export const themes = {
   light: vars(NAV_THEME.light),
   dark: vars(NAV_THEME.dark),
 };
+
+export function getThemeColor(
+  color: keyof typeof NAV_THEME.light,
+  scheme: "light" | "dark" | undefined
+) {
+  return `hsl(${NAV_THEME[scheme ?? "light"][color]})`;
+}
