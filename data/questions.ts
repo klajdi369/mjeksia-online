@@ -1,4 +1,19 @@
-const questions = [
+export type questionType = {
+  id: number;
+  question_text: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  image: string | null;
+  subject: string;
+  answer: "A" | "B" | "C" | "D";
+  explanation: string;
+};
+
+const questions: questionType[] = [
   {
     id: 1,
     question_text: "Treguesi i përthyerjes në një mjedis të tejdukshëm është:",
@@ -8179,9 +8194,10 @@ const questions = [
     question_text:
       "Nga një bakter u izolua një proteinë me masë 10,800 g/mol. Përcaktoni masën molare të gjenit përkatës, kur dihet se masa e një nukleotidi është 310 g/mol, kurse masa e një aminoacidi është 120 g/mol:",
     options: {
-      A: "D)2,700 g/mol",
+      A: "90 g/mol",
       B: "270 g/mol",
       C: "83,700 g/mol",
+      D: "2,700 g/mol",
     },
     image: null,
     subject: "Diversiteti",
@@ -13597,10 +13613,10 @@ const questions = [
   {
     id: 858,
     question_text:
-      "Një skiator zbret përgjatë një kodrine me akull 10m të gjatë dhe 4m të lartë. Nxitimi i tij gjatë është:(g=10m/s2) zbritjes",
+      "Një skiator zbret përgjatë një kodrine me akull 10m të gjatë dhe 4m të lartë. Nxitimi i tij gjatë zbritjes është:(g=10m/s2)",
     options: {
       A: "2,5m/s2",
-      B: "",
+      B: "4m/s2",
       C: "5m/s2",
       D: "10m/s2",
     },
@@ -19968,13 +19984,18 @@ const questions = [
   },
   {
     id: 1262,
-    question_text: "",
-    options: {},
+    question_text:
+      "Alternativa e saktë, për numrin e mol-atomeve të secilit element që ndodhen në 155gram Ca3(PO4)2. (MrCa3(PO4)2=310) është:",
+    options: {
+      A: "3mol-atome Ca; 1 mol-atome P; 4 mol-atome O",
+      B: "1,5 mol-atome Ca; 1 mol-atome P; 4 mol-atome O",
+      C: "1,5 mol-atome Ca; 2 mol-atome P; 4 mol-atome O",
+      D: "1,5 mol-atome Ca; 1 mol-atome P; 2 mol-atome O",
+    },
     image: null,
     subject: "Lidhjet kimike, simbolet, formulat dhe njehsimet stekiometrike",
     answer: "A",
-    explanation:
-      "Pyetja është e paplotë dhe nuk përmban asnjë informacion për të zgjedhur një përgjigje. Përgjigja 'A' është zgjedhur si e paracaktuar për shkak të pyetjes së mangët.",
+    explanation: "Nje problem ndodhi ne pergjigjen e pyetjes.",
   },
   {
     id: 1263,
