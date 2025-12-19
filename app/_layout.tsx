@@ -3,11 +3,21 @@ import "../global.css";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import { useColorScheme } from "nativewind";
-import { View } from "react-native";
+import { useEffect } from "react";
+import { Platform, View } from "react-native";
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      SystemUI.setBackgroundColorAsync(
+        getThemeColor("--background", colorScheme)
+      );
+    }
+  }, [colorScheme]);
 
   return (
     <>
