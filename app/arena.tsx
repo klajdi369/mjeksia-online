@@ -8,7 +8,13 @@ import { sql, type InferSelectModel } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 export default function Arena() {
   const db = useSQLiteContext();
@@ -67,8 +73,8 @@ export default function Arena() {
   }
 
   return (
-    <View className="flex-1 bg-background p-6 justify-between">
-      <View>
+    <View className="flex-1 bg-background justify-between">
+      <ScrollView contentContainerStyle={{ padding: 24 }}>
         <Text className="text-muted-foreground mb-2">
           Pyetja {currentQuestion.subId} - {currentQuestion.exam_title}
         </Text>
@@ -129,7 +135,6 @@ export default function Arena() {
           })}
         </View>
 
-        {/* Explanation shown only after guessing */}
         {guess && (
           <View className="mt-4 p-4 bg-accent/20 rounded-lg border border-accent/30">
             <Text className="text-accent-foreground font-bold mb-1">
@@ -141,17 +146,19 @@ export default function Arena() {
             </Text>
           </View>
         )}
-      </View>
+      </ScrollView>
 
-      <Pressable
-        className="bg-primary p-4 w-full rounded-lg active:bg-primary/90 flex-row justify-between items-center"
-        onPress={onNext}
-      >
-        <Text className="font-semibold text-lg text-primary-foreground">
-          Vazhdo
-        </Text>
-        <Ionicons name="arrow-forward" size={22} color="black" />
-      </Pressable>
+      <View className="p-6 border-t border-border bg-background">
+        <Pressable
+          className="bg-primary p-4 w-full rounded-lg active:bg-primary/90 flex-row justify-between items-center"
+          onPress={onNext}
+        >
+          <Text className="font-semibold text-lg text-primary-foreground">
+            Continue
+          </Text>
+          <Ionicons name="arrow-forward" size={22} color="black" />
+        </Pressable>
+      </View>
     </View>
   );
 }
