@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mjeksia Online",
     "slug": "mjeksia-online",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mjeksiaonline",
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.visarmullaj.mjeksiaonline"
     },
     "web": {
       "bundler": "metro",
@@ -45,6 +46,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ee137e19-390b-497f-b06d-40c7a226fc76"
+      }
     }
   }
 }

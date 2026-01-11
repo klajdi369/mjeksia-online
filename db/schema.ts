@@ -1,4 +1,4 @@
-import { int, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
+import { int, real, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
 
 export const questions = sqliteTable(
   "questions",
@@ -24,3 +24,11 @@ export const questions = sqliteTable(
   },
   (table) => [unique("unique_exam_question").on(table.exam_title, table.subId)]
 );
+
+export const math_svgs = sqliteTable("math_svgs", {
+  hash: text("hash").primaryKey(),
+  xml: text("xml").notNull(),
+  w: real("w").notNull(),
+  h: real("h").notNull(),
+  v: real("v").notNull(),
+});

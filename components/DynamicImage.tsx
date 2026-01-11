@@ -1,15 +1,14 @@
-import { Image, useImage } from "expo-image";
+import { Image, ImageSource } from "expo-image";
 
-export default function DynamicImage({ source }: any) {
-  const image = useImage(source);
-
-  // Calculate aspect ratio once loaded
-  const aspectRatio = image ? image.width / image.height : 1;
-
+export default function DynamicImage({ source }: { source: ImageSource }) {
   return (
     <Image
       source={source}
-      style={{ width: "100%", aspectRatio, borderRadius: 2 }}
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: 2,
+      }}
       contentFit="contain"
     />
   );

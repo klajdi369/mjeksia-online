@@ -70,7 +70,7 @@ export default function RootLayout() {
         >
           <SQLiteProvider
             databaseName="questions.db"
-            assetSource={{ assetId: require("@/assets/questions.db") }}
+            assetSource={{ assetId: require("@/assets/data.db") }}
             useSuspense
           >
             <Content colorScheme={colorScheme} />
