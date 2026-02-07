@@ -33,7 +33,7 @@ const TOTAL_TIME_SECONDS = 50 * 60;
 const Test = () => {
   // Read config once on mount using lazy initializer
   const [numberOfQuestions] = useState(() =>
-    Storage.getItemSync("test_question_amount") === "10" ? 10 : 40,
+    Storage.getItemSync("test_question_amount") === "10" ? 10 : 50,
   );
 
   const { drizzleDb } = useDrizzle();

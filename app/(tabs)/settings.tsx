@@ -26,7 +26,7 @@ export default function Settings() {
 
   const toggleTestQuestionAmount = () => {
     if (isTestQuestionAmount10) {
-      Storage.setItemSync("test_question_amount", "40");
+      Storage.setItemSync("test_question_amount", "50");
     } else {
       Storage.setItemSync("test_question_amount", "10");
     }
