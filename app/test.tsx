@@ -6,6 +6,7 @@ import { ImageModal } from "@/components/modals/ImageModal";
 import { OverviewModal } from "@/components/modals/OverviewModal";
 import { TimerHeader } from "@/components/TimerHeader";
 import { imageMap } from "@/constants/imageMap";
+import { getSetting } from "@/constants/settings";
 import { getThemeColor } from "@/constants/theme";
 import { loadNQuestions } from "@/db/questions";
 import { questions } from "@/db/schema";
@@ -16,7 +17,6 @@ import { cn } from "@/lib/utils";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { InferSelectModel } from "drizzle-orm";
 import * as Haptics from "expo-haptics";
-import Storage from "expo-sqlite/kv-store";
 import { useColorScheme } from "nativewind";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -28,13 +28,13 @@ import {
 } from "react-native";
 
 const HORIZONTAL_PADDING = 16;
-const TOTAL_TIME_SECONDS = 50 * 60;
 
 const Test = () => {
   // Read config once on mount using lazy initializer
   const [numberOfQuestions] = useState(() =>
-    Storage.getItemSync("test_question_amount") === "10" ? 10 : 50,
+    parseInt(getSetting("test_question_amount"), 10),
   );
+  const [totalTime] = useState(() => parseFloat(getSetting("test_time")) * 60);
 
   const { drizzleDb } = useDrizzle();
   const { colorScheme } = useColorScheme();
@@ -104,7 +104,7 @@ const Test = () => {
     restart: restartTimer,
     stop: stopTimer,
   } = useCountdownTimer({
-    totalSeconds: TOTAL_TIME_SECONDS,
+    totalSeconds: totalTime,
     hapticCountdownSeconds: 5,
     onTimeUp: handleTimeUp,
   });
@@ -140,7 +140,7 @@ const Test = () => {
         });
       }
     },
-    [isFinished],
+    [isFinished, remainingSeconds],
   );
 
   const onPrev = useCallback(() => {
@@ -158,7 +158,7 @@ const Test = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setIsConfirmModalOpen(true);
-  }, [currentIndex, numberOfQuestions]);
+  }, [currentIndex, numberOfQuestions, remainingSeconds]);
 
   const restartTest = useCallback(() => {
     setIsOverviewModalOpen(false);

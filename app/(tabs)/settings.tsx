@@ -1,58 +1,47 @@
-import SettingsToggle from "@/components/SettingsToggle";
-import Storage from "expo-sqlite/kv-store";
+// settings.tsx
+import { SettingRow } from "@/components/SettingRow";
+import { SettingsKey, settingsSchema } from "@/constants/settings";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 export default function Settings() {
-  const { colorScheme, setColorScheme } = useColorScheme();
-  const [isDarkThemeEnabled, setIsDarkThemeEnabled] = useState(
-    colorScheme === "dark",
+  const { setColorScheme } = useColorScheme();
+
+  // Group settings by section, filter by scope
+  const entries = Object.entries(settingsSchema).filter(
+    ([_, def]) => def.scope !== "dev" || __DEV__,
   );
 
-  const toggleSwitch = () => {
-    const newTheme = colorScheme === "dark" ? "light" : "dark";
-
-    setColorScheme(newTheme);
-
-    Storage.setItemSync("user_theme", newTheme);
-    setIsDarkThemeEnabled((previousState) => !previousState);
-  };
-
-  // DEBUG
-  const [isTestQuestionAmount10, setIsTestQuestionAmount10] = useState(
-    Storage.getItemSync("test_question_amount") === "10",
+  const sections = entries.reduce<Record<string, SettingsKey[]>>(
+    (acc, [key, def]) => {
+      (acc[def.section] ??= []).push(key as SettingsKey);
+      return acc;
+    },
+    {},
   );
 
-  const toggleTestQuestionAmount = () => {
-    if (isTestQuestionAmount10) {
-      Storage.setItemSync("test_question_amount", "50");
-    } else {
-      Storage.setItemSync("test_question_amount", "10");
-    }
-    setIsTestQuestionAmount10((previousState) => !previousState);
+  // Side effects for specific settings
+  const sideEffects: Partial<Record<SettingsKey, (v: string) => void>> = {
+    user_theme: (v) => setColorScheme(v as "light" | "dark"),
   };
 
   return (
-    <View className="flex-1 bg-background px-4">
-      <SettingsToggle
-        text="Dark mode"
-        isEnabled={isDarkThemeEnabled}
-        action={toggleSwitch}
-      />
-      <View className="h-[1px] w-full bg-border" />
-      {__DEV__ && (
-        <>
-          <Text className="text-foreground text-2xl font-semibold mt-6">
-            Debug
+    <ScrollView className="flex-1 bg-background px-4">
+      {Object.entries(sections).map(([section, keys]) => (
+        <View key={section}>
+          <Text className="text-foreground text-xl font-semibold mt-6 mb-2">
+            {section}
           </Text>
-          <SettingsToggle
-            text="Set test questions to 10"
-            isEnabled={isTestQuestionAmount10}
-            action={toggleTestQuestionAmount}
-          />
-        </>
-      )}
-    </View>
+          <View className="h-[1px] w-full bg-border" />
+          {keys.map((key) => (
+            <SettingRow
+              key={key}
+              settingKey={key}
+              onUpdate={sideEffects[key]}
+            />
+          ))}
+        </View>
+      ))}
+    </ScrollView>
   );
 }

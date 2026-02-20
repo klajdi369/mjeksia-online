@@ -1,3 +1,4 @@
+import { getSetting } from "@/constants/settings";
 import { getThemeColor, themes } from "../constants/theme";
 import "../global.css";
 
@@ -5,7 +6,6 @@ import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
-import Storage from "expo-sqlite/kv-store";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useColorScheme } from "nativewind";
@@ -21,11 +21,7 @@ export default function RootLayout() {
   const hasHiddenSplash = useRef(false);
 
   useEffect(() => {
-    const savedTheme = Storage.getItemSync("user_theme");
-
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setColorScheme(savedTheme);
-    }
+    setColorScheme(getSetting("user_theme"));
 
     setIsReady(true);
   }, []);
