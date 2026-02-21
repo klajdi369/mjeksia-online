@@ -41,7 +41,7 @@ export const useCountdownTimer = ({
           intervalRef.current = null;
           setIsRunning(false);
 
-          onTimeUpRef.current?.(remainingSeconds);
+          onTimeUpRef.current?.(0);
 
           return 0;
         }

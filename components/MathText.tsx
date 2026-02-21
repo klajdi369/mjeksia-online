@@ -2,7 +2,7 @@ import * as schema from "@/db/schema";
 import { useDrizzle } from "@/hooks/useDrizzle";
 import { getHashedPiece } from "@/lib/utils";
 import { inArray } from "drizzle-orm";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   Text,
@@ -40,6 +40,7 @@ const MathText = ({
   const { drizzleDb } = useDrizzle();
   const { width: windowWidth } = useWindowDimensions();
   const [svgDataMap, setSvgDataMap] = useState<Record<string, MathSvgData>>({});
+  const fetchedHashes = useRef<Set<string>>(new Set());
 
   const mathPieces = useMemo(() => {
     return text.split(/(\$[^$]+\$)/g).map((piece, index) => {
@@ -57,10 +58,12 @@ const MathText = ({
   useEffect(() => {
     const fetchSvgs = async () => {
       const hashesToFetch = mathPieces
-        .filter((p) => p.isMath && p.hash && !svgDataMap[p.hash])
+        .filter((p) => p.isMath && p.hash && !fetchedHashes.current.has(p.hash))
         .map((p) => p.hash as string);
 
       if (hashesToFetch.length === 0) return;
+
+      hashesToFetch.forEach((h) => fetchedHashes.current.add(h));
 
       try {
         const results = await drizzleDb
@@ -91,12 +94,13 @@ const MathText = ({
           });
         }
       } catch (error) {
+        hashesToFetch.forEach((h) => fetchedHashes.current.delete(h));
         console.error("DB Fetch Error:", error);
       }
     };
 
     fetchSvgs();
-  }, [svgDataMap, mathPieces, drizzleDb]);
+  }, [mathPieces, drizzleDb]);
 
   const scalePx = fontSize * EX_RATIO;
 
