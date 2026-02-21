@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { type InferSelectModel } from "drizzle-orm";
 import { useColorScheme } from "nativewind";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -36,7 +36,7 @@ export default function Arena() {
     undefined,
   );
 
-  const loadNewQuestion = async () => {
+  const loadNewQuestion = useCallback(async () => {
     try {
       const result = await getRandomQuestion(drizzleDb);
       if (result.length > 0) {
@@ -45,12 +45,12 @@ export default function Arena() {
     } catch (error) {
       console.error("Error fetching question:", error);
     }
-  };
+  }, [drizzleDb]);
 
   // Load a question when the screen opens
   useEffect(() => {
     loadNewQuestion();
-  }, []);
+  }, [loadNewQuestion]);
 
   const onGuess = (letter: "A" | "B" | "C" | "D") => {
     if (!guess) {

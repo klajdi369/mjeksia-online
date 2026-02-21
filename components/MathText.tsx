@@ -96,7 +96,7 @@ const MathText = ({
     };
 
     fetchSvgs();
-  }, [mathPieces, drizzleDb]);
+  }, [svgDataMap, mathPieces, drizzleDb]);
 
   const scalePx = fontSize * EX_RATIO;
 

@@ -22,7 +22,7 @@ export const useCountdownTimer = ({
   const [remainingSeconds, setRemainingSeconds] = useState(totalSeconds);
   const [timerKey, setTimerKey] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTimeUpRef = useRef(onTimeUp);
 
   // Keep the callback ref updated without triggering effect re-runs

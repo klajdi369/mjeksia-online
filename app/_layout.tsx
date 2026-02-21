@@ -24,7 +24,7 @@ export default function RootLayout() {
     setColorScheme(getSetting("user_theme"));
 
     setIsReady(true);
-  }, []);
+  }, [setColorScheme]);
 
   useEffect(() => {
     if (Platform.OS === "android") {

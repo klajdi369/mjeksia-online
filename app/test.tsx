@@ -43,9 +43,9 @@ const Test = () => {
   const [allQuestions, setAllQuestions] = useState<
     InferSelectModel<typeof questions>[] | undefined
   >(undefined);
-  const [guesses, setGuesses] = useState<
-    Array<"A" | "B" | "C" | "D" | undefined>
-  >(() => new Array(numberOfQuestions).fill(undefined));
+  const [guesses, setGuesses] = useState<("A" | "B" | "C" | "D" | undefined)[]>(
+    () => new Array(numberOfQuestions).fill(undefined),
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -124,7 +124,7 @@ const Test = () => {
 
   useEffect(() => {
     loadNewQuestion();
-  }, []);
+  }, [loadNewQuestion]);
 
   const onGuess = useCallback(
     (letter: "A" | "B" | "C" | "D", index: number) => {
