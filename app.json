@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mjeksia Online",
     "slug": "mjeksia-online",
-    "version": "0.3.0",
+    "version": "0.4.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mjeksiaonline",
