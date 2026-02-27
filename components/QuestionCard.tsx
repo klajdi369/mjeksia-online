@@ -1,6 +1,6 @@
 import { getThemeColor } from "@/constants/theme";
-import { questions as questionsSchema } from "@/db/schema";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { questions as questionsSchema } from "@/services/db/schema";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { InferSelectModel } from "drizzle-orm";
 import React from "react";

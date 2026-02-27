@@ -1,7 +1,7 @@
-import { testSessions } from "@/db/schema";
-import { getRecentTests } from "@/db/testSessions";
 import { useDrizzle } from "@/hooks/useDrizzle";
 import { formatDate } from "@/lib/utils";
+import { testSessions } from "@/services/db/schema";
+import { getRecentTests } from "@/services/db/testSessions";
 import { InferSelectModel } from "drizzle-orm";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";

@@ -1,6 +1,6 @@
-import * as schema from "@/db/schema";
 import { useDrizzle } from "@/hooks/useDrizzle";
 import { getHashedPiece } from "@/lib/utils";
+import * as schema from "@/services/db/schema";
 import { inArray } from "drizzle-orm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {

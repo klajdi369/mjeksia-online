@@ -1,4 +1,4 @@
-import * as schema from "@/db/schema";
+import * as schema from "@/services/db/schema";
 import { sql } from "drizzle-orm";
 import { DbType } from "./types";
 

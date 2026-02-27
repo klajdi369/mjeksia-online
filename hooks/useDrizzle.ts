@@ -1,5 +1,5 @@
 // hooks/useDrizzle.ts
-import * as schema from "@/db/schema";
+import * as schema from "@/services/db/schema";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useSQLiteContext } from "expo-sqlite";

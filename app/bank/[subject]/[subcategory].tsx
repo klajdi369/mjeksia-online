@@ -1,7 +1,7 @@
 import { BankHeader } from "@/components/BankHeader";
 import { QuestionCard } from "@/components/QuestionCard";
-import { questions as questionsSchema } from "@/db/schema";
 import { useDrizzle } from "@/hooks/useDrizzle";
+import { questions as questionsSchema } from "@/services/db/schema";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { InferSelectModel } from "drizzle-orm";
 import { useLocalSearchParams, useRouter } from "expo-router";
