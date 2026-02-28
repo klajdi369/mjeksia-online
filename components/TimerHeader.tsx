@@ -15,12 +15,12 @@ export const TimerHeader = ({
   remainingSeconds,
   lowTimeThreshold = 60,
 }: TimerHeaderProps) => {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
   const isLowTime = remainingSeconds <= lowTimeThreshold;
 
   const timerColor = isLowTime
-    ? getThemeColor("--destructive", theme)
-    : getThemeColor("--foreground", theme);
+    ? getThemeColor("--destructive", scheme, theme)
+    : getThemeColor("--foreground", scheme, theme);
 
   return (
     <Stack.Screen

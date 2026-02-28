@@ -4,9 +4,15 @@ import type { AnySettingDef, SettingsSchema } from "./settingTypes";
 // ── Flat registry (single source of truth for types) ────────────────────
 
 export const settingsDefs = {
-  user_theme: {
+  user_color_scheme: {
     type: "select",
     label: "Theme",
+    options: { Leadgen: "Leadgen", Dracula: "Dracula" },
+    default: "Leadgen",
+  },
+  user_appearance: {
+    type: "select",
+    label: "Appearance",
     options: { light: "Light", dark: "Dark", system: "System" },
     default: "system",
   },
@@ -68,7 +74,10 @@ export const settingsSchema: SettingsSchema = {
     subsections: {
       UI: {
         title: "User Interface",
-        settings: { user_theme: settingsDefs.user_theme },
+        settings: {
+          user_color_scheme: settingsDefs.user_color_scheme,
+          user_appearance: settingsDefs.user_appearance,
+        },
       },
     },
   },

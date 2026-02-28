@@ -36,7 +36,7 @@ const Test = () => {
   const [totalTime] = useState(() => parseFloat(getSetting("test_time")) * 60);
 
   const { drizzleDb } = useDrizzle();
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
 
   const [error, setError] = useState(false);
   const [allQuestions, setAllQuestions] = useState<
@@ -215,7 +215,7 @@ const Test = () => {
         ) : (
           <ActivityIndicator
             size="large"
-            color={getThemeColor("--muted-foreground", theme)}
+            color={getThemeColor("--muted-foreground", scheme, theme)}
           />
         )}
       </View>
@@ -262,7 +262,7 @@ const Test = () => {
           {currentQuestion.exam_title}
         </Text>
         <MathText
-          color={getThemeColor("--foreground", theme)}
+          color={getThemeColor("--foreground", scheme, theme)}
           text={currentQuestion.question_text}
           className="text-foreground text-lg leading-6 font-medium"
           paddingHorizontal={HORIZONTAL_PADDING * 2}
@@ -310,7 +310,7 @@ const Test = () => {
                       `option_${letter.toLowerCase()}` as keyof typeof currentQuestion
                     ]
                   }`}
-                  color={getThemeColor("--card-foreground", theme)}
+                  color={getThemeColor("--card-foreground", scheme, theme)}
                   paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
                 />
               </Pressable>
@@ -323,7 +323,12 @@ const Test = () => {
               Shpjegimi:
             </Text>
             <MathText
-              color={getThemeColor("--secondary-foreground", theme, 0.9)}
+              color={getThemeColor(
+                "--secondary-foreground",
+                scheme,
+                theme,
+                0.9,
+              )}
               text={currentQuestion.explanation}
               className="text-secondary-foreground/90 text-sm"
               fontSize={14}
@@ -347,6 +352,7 @@ const Test = () => {
             size={22}
             color={getThemeColor(
               currentIndex === 0 ? "--muted-foreground" : "--foreground",
+              scheme,
               theme,
             )}
           />
@@ -388,6 +394,7 @@ const Test = () => {
                 : isLastQuestion
                   ? "--primary-foreground"
                   : "--foreground",
+              scheme,
               theme,
             )}
           />

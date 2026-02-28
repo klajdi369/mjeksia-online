@@ -12,7 +12,7 @@ interface QuestionImageProps {
 }
 
 export const QuestionImage = ({ imageKey, onPress }: QuestionImageProps) => {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
   const [alwaysShowPlaceholder] = useSetting("always_show_image_placeholder");
 
   if (imageKey) {
@@ -38,7 +38,7 @@ export const QuestionImage = ({ imageKey, onPress }: QuestionImageProps) => {
         <Ionicons
           name="image-outline"
           size={48}
-          color={getThemeColor("--muted-foreground", theme)}
+          color={getThemeColor("--muted-foreground", scheme, theme)}
         />
         <Text className="text-muted-foreground mt-2 font-medium">
           Nuk ka imazh

@@ -19,9 +19,9 @@ export function SettingItem({
 }) {
   const [value] = useSetting(settingKey);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
 
-  const primaryColor = getThemeColor("--primary", theme);
+  const primaryColor = getThemeColor("--primary", scheme, theme);
 
   // Use a runtime-typed setter that bypasses the generic constraint issue.
   // This is safe because the schema + runtime validation in setSetting

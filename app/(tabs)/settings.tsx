@@ -7,9 +7,13 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 export default function Settings() {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
 
-  const accentForegroundColor = getThemeColor("--accent-foreground", theme);
+  const accentForegroundColor = getThemeColor(
+    "--accent-foreground",
+    scheme,
+    theme,
+  );
   return (
     <ScrollView className="flex-1 bg-background px-4 pt-4">
       <View className="gap-4">

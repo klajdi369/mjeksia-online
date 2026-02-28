@@ -13,7 +13,7 @@ interface ImageModalProps {
 }
 
 export const ImageModal = ({ visible, imageKey, onClose }: ImageModalProps) => {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
   const { width: screenWidth } = useWindowDimensions();
 
   return (
@@ -31,7 +31,7 @@ export const ImageModal = ({ visible, imageKey, onClose }: ImageModalProps) => {
           <Ionicons
             name="close-circle"
             size={40}
-            color={getThemeColor("--foreground", theme)}
+            color={getThemeColor("--foreground", scheme, theme)}
           />
         </View>
 

@@ -92,7 +92,7 @@ export default function MarkdownTable({
   horizontalPadding = 0,
   className,
 }: MarkdownTableProps) {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
   const { width: screenWidth } = useWindowDimensions();
 
   const table = useMemo(
@@ -112,8 +112,8 @@ export default function MarkdownTable({
   const needsScroll = equalWidth < MIN_COL_WIDTH;
   const colWidth = needsScroll ? MIN_COL_WIDTH : equalWidth;
 
-  const foreground = getThemeColor("--foreground", theme);
-  const mutedForeground = getThemeColor("--muted-foreground", theme);
+  const foreground = getThemeColor("--foreground", scheme, theme);
+  const mutedForeground = getThemeColor("--muted-foreground", scheme, theme);
 
   const renderRow = (cells: string[], isHeader: boolean, rowIndex?: number) => (
     <View

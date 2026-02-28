@@ -15,9 +15,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   index,
 }) => {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
 
-  const accentForegroundColor = getThemeColor("--accent-foreground", theme);
+  const accentForegroundColor = getThemeColor(
+    "--accent-foreground",
+    scheme,
+    theme,
+  );
   return (
     <View className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
       <View className="bg-secondary/60 px-5 py-3 flex-row items-center justify-between border-b border-border/50">

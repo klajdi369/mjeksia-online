@@ -1,5 +1,10 @@
 import { useSettingsSideEffects } from "@/services/settings/settings";
-import { getThemeColor, themes } from "../constants/theme";
+import {
+  getThemeColor,
+  themes,
+  type AppearanceName,
+  type ColorSchemeName,
+} from "../constants/theme";
 import "../global.css";
 
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -16,7 +21,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { theme, isDark } = useAppTheme();
+  const { scheme, theme, isDark } = useAppTheme();
   const [isReady, setIsReady] = useState(false);
   const hasHiddenSplash = useRef(false);
 
@@ -29,9 +34,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      SystemUI.setBackgroundColorAsync(getThemeColor("--background", theme));
+      SystemUI.setBackgroundColorAsync(
+        getThemeColor("--background", scheme, theme),
+      );
     }
-  }, [theme]);
+  }, [scheme, theme]);
 
   const onLayoutRootView = useCallback(async () => {
     if (isReady && !hasHiddenSplash.current) {
@@ -46,15 +53,15 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <View
-        key={theme}
+        key={`${scheme}-${theme}`}
         onLayout={onLayoutRootView}
-        style={[themes[theme], { flex: 1 }]}
+        style={[themes[scheme][theme], { flex: 1 }]}
         className="bg-background"
       >
         <StatusBar
           style={isDark ? "light" : "dark"}
           translucent={false}
-          backgroundColor={getThemeColor("--background", theme)}
+          backgroundColor={getThemeColor("--background", scheme, theme)}
         />
         <Suspense
           fallback={
@@ -68,7 +75,7 @@ export default function RootLayout() {
             assetSource={{ assetId: require("@/assets/data.db") }}
             useSuspense
           >
-            <Content theme={theme} />
+            <Content scheme={scheme} theme={theme} />
           </SQLiteProvider>
         </Suspense>
       </View>
@@ -76,7 +83,13 @@ export default function RootLayout() {
   );
 }
 
-function Content({ theme }: { theme: "light" | "dark" }) {
+function Content({
+  scheme,
+  theme,
+}: {
+  scheme: ColorSchemeName;
+  theme: AppearanceName;
+}) {
   const db = useSQLiteContext();
   useDrizzleStudio(db);
 
@@ -84,10 +97,10 @@ function Content({ theme }: { theme: "light" | "dark" }) {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: getThemeColor("--background", theme),
+          backgroundColor: getThemeColor("--background", scheme, theme),
         },
         headerShadowVisible: false,
-        headerTintColor: getThemeColor("--foreground", theme),
+        headerTintColor: getThemeColor("--foreground", scheme, theme),
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -4,19 +4,19 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 
 export default function TabLayout() {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: getThemeColor("--primary", theme),
+        tabBarActiveTintColor: getThemeColor("--primary", scheme, theme),
         headerStyle: {
-          backgroundColor: getThemeColor("--background", theme),
+          backgroundColor: getThemeColor("--background", scheme, theme),
         },
         headerShadowVisible: false,
-        headerTintColor: getThemeColor("--foreground", theme),
+        headerTintColor: getThemeColor("--foreground", scheme, theme),
         tabBarStyle: {
-          backgroundColor: getThemeColor("--background", theme),
+          backgroundColor: getThemeColor("--background", scheme, theme),
         },
       }}
     >

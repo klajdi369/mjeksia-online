@@ -23,7 +23,7 @@ import {
 const HORIZONTAL_PADDING = 16;
 
 export default function Arena() {
-  const { theme } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
   const { drizzleDb } = useDrizzle();
   const [hideExplanation] = useSetting("hide_arena_explanation");
 
@@ -70,7 +70,7 @@ export default function Arena() {
       <View className="flex-1 bg-background justify-center items-center">
         <ActivityIndicator
           size="large"
-          color={getThemeColor("--muted-foreground", theme)}
+          color={getThemeColor("--muted-foreground", scheme, theme)}
         />
       </View>
     );
@@ -95,7 +95,7 @@ export default function Arena() {
           Pyetja {currentQuestion.subId} - {currentQuestion.exam_title}
         </Text>
         <MathText
-          color={getThemeColor("--foreground", theme)}
+          color={getThemeColor("--foreground", scheme, theme)}
           text={currentQuestion.question_text}
           className="text-foreground text-lg leading-6 font-medium"
           paddingHorizontal={HORIZONTAL_PADDING * 2}
@@ -140,7 +140,7 @@ export default function Arena() {
                       `option_${letter.toLowerCase()}` as keyof typeof currentQuestion
                     ]
                   }`}
-                  color={getThemeColor("--card-foreground", theme)}
+                  color={getThemeColor("--card-foreground", scheme, theme)}
                   // Account for ScrollView padding + button padding + border
                   paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
                 />
@@ -154,7 +154,12 @@ export default function Arena() {
               Shpjegimi:
             </Text>
             <MathText
-              color={getThemeColor("--secondary-foreground", theme, 0.9)}
+              color={getThemeColor(
+                "--secondary-foreground",
+                scheme,
+                theme,
+                0.9,
+              )}
               text={currentQuestion.explanation}
               className="text-secondary-foreground/90 text-sm"
               fontSize={14}
