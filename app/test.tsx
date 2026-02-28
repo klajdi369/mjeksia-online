@@ -90,6 +90,7 @@ const Test = () => {
   const handleTimeUp = useCallback(
     (timeLeft: number) => {
       setIsFinished(true);
+      setIsConfirmModalOpen(false);
       setIsOverviewModalOpen(true);
 
       writeToDatabase(false, timeLeft);
@@ -285,7 +286,7 @@ const Test = () => {
                 key={letter}
                 disabled={isFinished}
                 className={cn(
-                  "border-border bg-secondary border px-4 py-3 rounded-md active:opacity-80 justify-center",
+                  "border-border bg-card border px-4 py-3 rounded-md active:opacity-80 justify-center",
                   !isFinished && isSelected && "bg-blue-600 border-blue-700",
                   isSelected &&
                     !isCorrect &&
@@ -300,7 +301,7 @@ const Test = () => {
               >
                 <MathText
                   className={cn(
-                    "text-foreground align-middle",
+                    "text-card-foreground align-middle",
                     !isFinished && isSelected && "font-bold",
                     currentGuess && isCorrect && isFinished && "font-bold",
                   )}
@@ -309,7 +310,7 @@ const Test = () => {
                       `option_${letter.toLowerCase()}` as keyof typeof currentQuestion
                     ]
                   }`}
-                  color={getThemeColor("--foreground", theme)}
+                  color={getThemeColor("--card-foreground", theme)}
                   paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
                 />
               </Pressable>
@@ -317,14 +318,14 @@ const Test = () => {
           })}
         </View>
         {isFinished && (
-          <View className="mt-4 p-4 bg-accent rounded-lg border border-accent/30">
-            <Text className="text-accent-foreground font-bold mb-1">
+          <View className="mt-4 p-4 bg-secondary rounded-lg border border-secondary/30">
+            <Text className="text-secondary-foreground font-bold mb-1">
               Shpjegimi:
             </Text>
             <MathText
-              color={getThemeColor("--accent-foreground", theme, 0.9)}
+              color={getThemeColor("--secondary-foreground", theme, 0.9)}
               text={currentQuestion.explanation}
-              className="text-accent-foreground/90 text-sm"
+              className="text-secondary-foreground/90 text-sm"
               fontSize={14}
               paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
             />

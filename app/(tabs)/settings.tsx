@@ -22,7 +22,7 @@ export default function Settings() {
                 params: { section: sectionKey },
               })
             }
-            className="flex-row items-center justify-between p-4 bg-secondary rounded-xl border border-border active:opacity-70"
+            className="flex-row items-center justify-between p-4 bg-card rounded-xl border border-border active:opacity-70"
           >
             <View className="flex-row items-center gap-4">
               <View className="w-10 h-10 rounded-full bg-accent items-center justify-center">

@@ -22,19 +22,19 @@ export const ConfirmModal = ({
       onRequestClose={onCancel}
     >
       <View className="flex-1 bg-card/50 justify-center items-center p-4">
-        <View className="w-[85%] bg-background p-4 rounded-md">
-          <Text className="text-lg text-foreground">Perfundo testin?</Text>
+        <View className="w-[85%] bg-card border border-border p-4 rounded-md">
+          <Text className="text-lg text-card-foreground">Perfundo testin?</Text>
           {unansweredCount > 0 && (
-            <Text className="text-foreground mt-2">
+            <Text className="text-card-foreground mt-2">
               {unansweredCount} pyetje jane pa pergjigje
             </Text>
           )}
           <View className="flex-row gap-2 mt-4">
             <Pressable
-              className="flex-1 bg-secondary p-3 rounded-md active:opacity-80"
+              className="flex-1 bg-secondary border border-border p-3 rounded-md active:opacity-80"
               onPress={onCancel}
             >
-              <Text className="text-foreground text-center font-semibold">
+              <Text className="text-secondary-foreground text-center font-semibold">
                 Anulo
               </Text>
             </Pressable>

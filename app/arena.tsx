@@ -119,7 +119,7 @@ export default function Arena() {
                 key={letter}
                 disabled={!!guess}
                 className={cn(
-                  "border-border bg-secondary border px-4 py-3 rounded-md active:opacity-80 justify-center",
+                  "border-border bg-card border px-4 py-3 rounded-md active:opacity-80 justify-center",
                   // Red background if this was our wrong guess
                   isSelected &&
                     !isCorrect &&
@@ -131,7 +131,7 @@ export default function Arena() {
               >
                 <MathText
                   className={cn(
-                    "text-foreground align-middle",
+                    "text-card-foreground align-middle",
                     guess && isCorrect && "text-foreground font-bold",
                     isSelected && !isCorrect && "text-foreground",
                   )}
@@ -140,7 +140,7 @@ export default function Arena() {
                       `option_${letter.toLowerCase()}` as keyof typeof currentQuestion
                     ]
                   }`}
-                  color={getThemeColor("--foreground", theme)}
+                  color={getThemeColor("--card-foreground", theme)}
                   // Account for ScrollView padding + button padding + border
                   paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
                 />
@@ -149,14 +149,14 @@ export default function Arena() {
           })}
         </View>
         {guess && !hideExplanation && (
-          <View className="mt-4 p-4 bg-accent rounded-lg border border-accent/30">
-            <Text className="text-accent-foreground font-bold mb-1">
+          <View className="mt-4 p-4 bg-secondary rounded-lg border border-secondary/30">
+            <Text className="text-secondary-foreground font-bold mb-1">
               Shpjegimi:
             </Text>
             <MathText
-              color={getThemeColor("--accent-foreground", theme, 0.9)}
+              color={getThemeColor("--secondary-foreground", theme, 0.9)}
               text={currentQuestion.explanation}
-              className="text-accent-foreground/90 text-sm"
+              className="text-secondary-foreground/90 text-sm"
               fontSize={14}
               // Account for ScrollView padding + button padding + border
               paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}

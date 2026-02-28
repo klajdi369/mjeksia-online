@@ -21,21 +21,23 @@ export const OverviewModal = ({
   return (
     <Modal visible={visible} transparent={true} animationType="fade">
       <View className="flex-1 bg-card/50 justify-center items-center p-4">
-        <View className="w-[90%] bg-background p-6 rounded-md">
-          <Text className="text-2xl text-foreground font-bold mb-6">
+        <View className="w-[90%] bg-card border border-border p-6 rounded-md">
+          <Text className="text-2xl text-card-foreground font-bold mb-6">
             Rezultati i Testit
           </Text>
 
           <View className="bg-card p-4 rounded-lg mb-4">
             <View className="flex-row justify-between mb-3">
-              <Text className="text-foreground">Përgjigje të sakta:</Text>
-              <Text className="text-foreground font-bold">
+              <Text className="text-card-foreground">Përgjigje të sakta:</Text>
+              <Text className="text-card-foreground font-bold">
                 {correctCount} / {totalCount}
               </Text>
             </View>
             <View className="flex-row justify-between">
-              <Text className="text-foreground">Përqindja:</Text>
-              <Text className="text-foreground font-bold">{percentage}%</Text>
+              <Text className="text-card-foreground">Përqindja:</Text>
+              <Text className="text-card-foreground font-bold">
+                {percentage}%
+              </Text>
             </View>
           </View>
 

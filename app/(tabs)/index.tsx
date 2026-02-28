@@ -31,7 +31,9 @@ export default function Index() {
           href="/arena"
           className="bg-primary p-4 w-full rounded-lg active:bg-primary/90"
         >
-          <Text className="font-semibold text-lg">Pyetje te Cfaredoshme</Text>
+          <Text className="font-semibold text-lg text-primary-foreground">
+            Pyetje te Cfaredoshme
+          </Text>
         </Link>
         <View className="mt-4 flex flex-row gap-4">
           <Link

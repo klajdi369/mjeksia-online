@@ -54,7 +54,7 @@ export default function SettingSectionScreen() {
               {subDef.title}
             </Text>
 
-            <View className="bg-secondary rounded-xl overflow-hidden border border-border">
+            <View className="bg-card rounded-xl overflow-hidden border border-border">
               {Object.entries(subDef.settings).map(
                 ([settingKey, settingDef], index, array) => (
                   <View key={settingKey}>
