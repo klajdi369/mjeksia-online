@@ -2,10 +2,10 @@ import MarkdownTable from "@/components/MarkdownTable";
 import MathText from "@/components/MathText";
 import { ImageModal } from "@/components/modals/ImageModal";
 import { QuestionImage } from "@/components/QuestionImage";
+import { QuestionOptions } from "@/components/QuestionOptions";
 import { getThemeColor } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useDrizzle } from "@/hooks/useDrizzle";
-import { cn } from "@/lib/utils";
 import { getRandomQuestion } from "@/services/db/questions";
 import { questions } from "@/services/db/schema";
 import { useSetting } from "@/services/settings/settings";
@@ -109,45 +109,15 @@ export default function Arena() {
           imageKey={currentQuestion.image}
           onPress={() => setIsImageModalOpen(true)}
         />
-        <View className="gap-3 mt-6">
-          {(["A", "B", "C", "D"] as const).map((letter) => {
-            const isCorrect = currentQuestion.answer === letter;
-            const isSelected = guess === letter;
-
-            return (
-              <Pressable
-                key={letter}
-                disabled={!!guess}
-                className={cn(
-                  "border-border bg-card border px-4 py-3 rounded-md active:opacity-80 justify-center",
-                  // Red background if this was our wrong guess
-                  isSelected &&
-                    !isCorrect &&
-                    "bg-destructive border-destructive",
-                  // Green background if this is the correct answer AND we have guessed
-                  guess && isCorrect && "bg-green-600 border-green-700",
-                )}
-                onPress={() => onGuess(letter)}
-              >
-                <MathText
-                  className={cn(
-                    "text-card-foreground align-middle",
-                    guess && isCorrect && "text-foreground font-bold",
-                    isSelected && !isCorrect && "text-foreground",
-                  )}
-                  text={`${
-                    currentQuestion[
-                      `option_${letter.toLowerCase()}` as keyof typeof currentQuestion
-                    ]
-                  }`}
-                  color={getThemeColor("--card-foreground", scheme, theme)}
-                  // Account for ScrollView padding + button padding + border
-                  paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
+        <QuestionOptions
+          options={currentQuestion}
+          correctAnswer={currentQuestion.answer}
+          selectedOption={guess}
+          onOptionPress={onGuess}
+          isRevealed={!!guess}
+          disabled={!!guess}
+          horizontalPadding={HORIZONTAL_PADDING}
+        />
         {guess && !hideExplanation && (
           <View className="mt-4 p-4 bg-secondary rounded-lg border border-secondary/30">
             <Text className="text-secondary-foreground font-bold mb-1">

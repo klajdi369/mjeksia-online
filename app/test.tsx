@@ -4,6 +4,7 @@ import { ConfirmModal } from "@/components/modals/ConfirmModal";
 import { ImageModal } from "@/components/modals/ImageModal";
 import { OverviewModal } from "@/components/modals/OverviewModal";
 import { QuestionImage } from "@/components/QuestionImage";
+import { OptionLetter, QuestionOptions } from "@/components/QuestionOptions";
 import { TimerHeader } from "@/components/TimerHeader";
 import { getThemeColor } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -127,7 +128,7 @@ const Test = () => {
   }, [loadNewQuestion]);
 
   const onGuess = useCallback(
-    (letter: "A" | "B" | "C" | "D", index: number) => {
+    (letter: OptionLetter, index: number) => {
       if (!isFinished) {
         setGuesses((prev) => {
           if (prev[index] === letter) return prev;
@@ -276,47 +277,15 @@ const Test = () => {
           imageKey={currentQuestion.image}
           onPress={() => setIsImageModalOpen(true)}
         />
-        <View className="gap-3 mt-6">
-          {(["A", "B", "C", "D"] as const).map((letter) => {
-            const isCorrect = currentQuestion.answer === letter;
-            const isSelected = currentGuess === letter;
-
-            return (
-              <Pressable
-                key={letter}
-                disabled={isFinished}
-                className={cn(
-                  "border-border bg-card border px-4 py-3 rounded-md active:opacity-80 justify-center",
-                  !isFinished && isSelected && "bg-blue-600 border-blue-700",
-                  isSelected &&
-                    !isCorrect &&
-                    isFinished &&
-                    "bg-destructive border-destructive",
-                  currentGuess &&
-                    isCorrect &&
-                    isFinished &&
-                    "bg-green-600 border-green-700",
-                )}
-                onPress={() => onGuess(letter, currentIndex)}
-              >
-                <MathText
-                  className={cn(
-                    "text-card-foreground align-middle",
-                    !isFinished && isSelected && "font-bold",
-                    currentGuess && isCorrect && isFinished && "font-bold",
-                  )}
-                  text={`${
-                    currentQuestion[
-                      `option_${letter.toLowerCase()}` as keyof typeof currentQuestion
-                    ]
-                  }`}
-                  color={getThemeColor("--card-foreground", scheme, theme)}
-                  paddingHorizontal={HORIZONTAL_PADDING * 2 + 16 * 2 + 1}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
+        <QuestionOptions
+          options={currentQuestion}
+          correctAnswer={currentQuestion.answer}
+          selectedOption={currentGuess}
+          onOptionPress={(letter) => onGuess(letter, currentIndex)}
+          isRevealed={isFinished}
+          disabled={isFinished}
+          horizontalPadding={HORIZONTAL_PADDING}
+        />
         {isFinished && (
           <View className="mt-4 p-4 bg-secondary rounded-lg border border-secondary/30">
             <Text className="text-secondary-foreground font-bold mb-1">
