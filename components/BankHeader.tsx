@@ -1,3 +1,5 @@
+import { getThemeColor } from "@/constants/theme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -17,6 +19,8 @@ export const BankHeader: React.FC<BankHeaderProps> = ({
   onFocusStart,
   showFocusButton = false,
 }) => {
+  const { scheme, theme, isDark } = useAppTheme();
+
   return (
     <View className="mb-4 px-4 pt-2">
       <View className="flex-row items-center justify-between">
@@ -51,7 +55,11 @@ export const BankHeader: React.FC<BankHeaderProps> = ({
               className="w-10 h-10 items-center justify-center rounded-full bg-primary active:opacity-80 shadow-md shadow-primary/30"
               accessibilityLabel="Start focused test"
             >
-              <Ionicons name="rocket" size={18} color="#FFFFFF" />
+              <Ionicons
+                name="rocket"
+                size={18}
+                color={getThemeColor("--primary-foreground", scheme, theme)}
+              />
             </Pressable>
           ) : null}
         </View>

@@ -13,7 +13,7 @@ export const settingsDefs = {
       Zen: "Zen",
       Brutalist: "Brutalist",
     },
-    default: "Leadgen",
+    default: "Zen",
   },
   user_appearance: {
     type: "select",

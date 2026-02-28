@@ -1,5 +1,7 @@
 import { BankHeader } from "@/components/BankHeader";
 import { QuestionCard } from "@/components/QuestionCard";
+import { getThemeColor } from "@/constants/theme";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { useDrizzle } from "@/hooks/useDrizzle";
 import { questions as questionsSchema } from "@/services/db/schema";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -16,6 +18,7 @@ import {
 
 export default function BankQuestions() {
   const router = useRouter();
+  const { scheme, theme, isDark } = useAppTheme();
   const { subject, subcategory } = useLocalSearchParams<{
     subject: string;
     subcategory: string;
@@ -101,13 +104,20 @@ export default function BankQuestions() {
             </Text>
           </View>
           <View className="w-16 h-16 rounded-2xl bg-background items-center justify-center rotate-3 border border-border">
-            <Ionicons name="document-text" size={32} color="#3b82f6" />
+            <Ionicons
+              name="document-text"
+              size={32}
+              color={getThemeColor("--info", scheme, theme)}
+            />
           </View>
         </View>
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center py-16">
-            <ActivityIndicator size="large" color="#3b82f6" />
+            <ActivityIndicator
+              size="large"
+              color={getThemeColor("--info", scheme, theme)}
+            />
             <Text className="text-muted-foreground font-medium mt-4">
               Duke ngarkuar pyetjet...
             </Text>
