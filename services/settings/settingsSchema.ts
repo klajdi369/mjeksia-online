@@ -7,18 +7,23 @@ export const settingsDefs = {
   user_color_scheme: {
     type: "select",
     label: "Theme",
-    options: {
-      Leadgen: "Leadgen",
-      Dracula: "Dracula",
-      Zen: "Zen",
-      Brutalist: "Brutalist",
-    },
+    options: [
+      { value: "Zen", label: "Zen" },
+      { value: "Amber", label: "Amber" },
+      { value: "Dracula", label: "Dracula" },
+      { value: "Leadgen", label: "Leadgen" },
+      { value: "Brutalist", label: "Brutalist" },
+    ],
     default: "Zen",
   },
   user_appearance: {
     type: "select",
     label: "Appearance",
-    options: { light: "Light", dark: "Dark", system: "System" },
+    options: [
+      { value: "light", label: "Light" },
+      { value: "dark", label: "Dark" },
+      { value: "system", label: "System" },
+    ],
     default: "system",
   },
   hide_arena_explanation: {
@@ -30,20 +35,23 @@ export const settingsDefs = {
   test_question_amount: {
     type: "select",
     label: "Questions per test",
-    options: { "50": "50 pyetje", "10": "10 pyetje" },
+    options: [
+      { value: "50", label: "50 pyetje" },
+      { value: "10", label: "10 pyetje" },
+    ],
     default: "50",
     scope: "dev",
   },
   test_time: {
     type: "select",
     label: "Time per test",
-    options: {
-      "0.5": "30 sek",
-      "1": "1 min",
-      "5": "5 min",
-      "10": "10 min",
-      "50": "50 min",
-    },
+    options: [
+      { value: "0.5", label: "30 sek" },
+      { value: "1", label: "1 min" },
+      { value: "5", label: "5 min" },
+      { value: "10", label: "10 min" },
+      { value: "50", label: "50 min" },
+    ],
     default: "50",
     scope: "dev",
   },
@@ -63,9 +71,9 @@ export type SettingsKey = keyof SettingsDefs;
 
 export type SettingValue<K extends SettingsKey> = SettingsDefs[K] extends {
   type: "select";
-  options: infer O;
+  options: readonly { value: infer V }[];
 }
-  ? keyof O & string
+  ? V & string
   : SettingsDefs[K] extends { type: "toggle" }
     ? boolean
     : never;

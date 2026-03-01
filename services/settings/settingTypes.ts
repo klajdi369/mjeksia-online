@@ -6,9 +6,11 @@ export type BaseSettingDef = {
   description?: string;
 };
 
+export type SelectOption = { label: string; value: string };
+
 export type SelectSettingDef = BaseSettingDef & {
   type: "select";
-  options: Record<string, string>;
+  options: readonly SelectOption[];
   default: string;
 };
 

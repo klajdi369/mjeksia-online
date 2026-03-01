@@ -57,8 +57,8 @@ export function SettingItem({
   }
 
   if (def.type === "select") {
-    const entries = Object.entries(def.options);
-    const isDropdown = entries.length > 3;
+    const options = def.options;
+    const isDropdown = options.length > 3;
 
     const handleSelect = (optionValue: string) => {
       setValueRaw(optionValue);
@@ -66,7 +66,7 @@ export function SettingItem({
     };
 
     const currentLabel =
-      def.options[value as keyof typeof def.options] || String(value);
+      options.find((o) => o.value === value)?.label || String(value);
 
     return (
       <View className="py-4 px-4 flex-col justify-start">
@@ -114,13 +114,13 @@ export function SettingItem({
                   </View>
 
                   <ScrollView contentContainerStyle={{ padding: 8 }}>
-                    {entries.map(([optVal, optLabel]) => (
+                    {options.map((option) => (
                       <Pressable
-                        key={optVal}
-                        onPress={() => handleSelect(optVal)}
+                        key={option.value}
+                        onPress={() => handleSelect(option.value)}
                         className={cn(
                           "p-3 rounded-lg mb-1 flex-row items-center justify-between",
-                          String(optVal) === String(value)
+                          String(option.value) === String(value)
                             ? "bg-secondary"
                             : "bg-transparent",
                         )}
@@ -128,14 +128,14 @@ export function SettingItem({
                         <Text
                           className={cn(
                             "text-base",
-                            String(optVal) === String(value)
+                            String(option.value) === String(value)
                               ? "text-primary font-semibold"
                               : "text-foreground",
                           )}
                         >
-                          {String(optLabel)}
+                          {String(option.label)}
                         </Text>
-                        {String(optVal) === String(value) && (
+                        {String(option.value) === String(value) && (
                           <Text className="text-primary">✓</Text>
                         )}
                       </Pressable>
@@ -147,25 +147,25 @@ export function SettingItem({
           </>
         ) : (
           <View className="flex-row gap-2">
-            {entries.map(([optVal, optLabel]) => (
+            {options.map((option) => (
               <Pressable
-                key={optVal}
-                onPress={() => handleSelect(optVal)}
+                key={option.value}
+                onPress={() => handleSelect(option.value)}
                 className={cn(
                   "px-4 py-2 rounded-lg border",
-                  String(optVal) === String(value)
+                  String(option.value) === String(value)
                     ? "bg-primary border-primary"
                     : "bg-background border-border",
                 )}
               >
                 <Text
                   className={cn(
-                    String(optVal) === String(value)
+                    String(option.value) === String(value)
                       ? "text-primary-foreground font-semibold"
                       : "text-foreground",
                   )}
                 >
-                  {String(optLabel)}
+                  {String(option.label)}
                 </Text>
               </Pressable>
             ))}

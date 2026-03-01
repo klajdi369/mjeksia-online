@@ -30,7 +30,8 @@ export function getSetting<K extends SettingsKey>(key: K): SettingValue<K> {
 
     if (raw !== null) {
       if (def.type === "select") {
-        if (raw in def.options) return raw as unknown as SettingValue<K>;
+        if (def.options.some((o) => o.value === raw))
+          return raw as unknown as SettingValue<K>;
       } else if (def.type === "toggle") {
         if (raw === "true" || raw === "false")
           return (raw === "true") as unknown as SettingValue<K>;
@@ -49,7 +50,7 @@ export function setSetting<K extends SettingsKey>(
   const def: AnySettingDef = settingsDefs[key];
 
   if (def.type === "select") {
-    if (!(String(value) in def.options)) {
+    if (!def.options.some((o) => o.value === String(value))) {
       console.warn(`Invalid value "${String(value)}" for setting "${key}"`);
       return;
     }
