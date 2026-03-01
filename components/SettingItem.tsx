@@ -1,4 +1,4 @@
-import { getThemeColor } from "@/constants/theme";
+import { ColorSchemeName, getThemeColor } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { cn } from "@/lib/utils";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/services/settings/settings";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { ThemePreview } from "./ThemePreview";
 
 export function SettingItem({
   settingKey,
@@ -87,9 +88,17 @@ export function SettingItem({
               onPress={() => setDropdownOpen(true)}
               className="flex-row items-center justify-between px-4 py-3 rounded-lg border border-border bg-background"
             >
-              <Text className="text-foreground font-medium">
-                {currentLabel}
-              </Text>
+              <View className="flex-row items-center">
+                {settingKey === "user_color_scheme" && (
+                  <ThemePreview
+                    scheme={value as ColorSchemeName}
+                    appearance={theme}
+                  />
+                )}
+                <Text className="text-foreground font-medium">
+                  {currentLabel}
+                </Text>
+              </View>
               <Text className="text-muted-foreground text-xs">▼</Text>
             </Pressable>
 
@@ -107,7 +116,7 @@ export function SettingItem({
                   className="w-full max-h-[50%] bg-background rounded-xl overflow-hidden border border-border"
                   onPress={(e) => e.stopPropagation()}
                 >
-                  <View className="p-4 border-b border-border bg-secondary/50">
+                  <View className="p-4 border-b border-border bg-card">
                     <Text className="text-foreground font-semibold text-lg">
                       Select {def.label}
                     </Text>
@@ -119,22 +128,28 @@ export function SettingItem({
                         key={option.value}
                         onPress={() => handleSelect(option.value)}
                         className={cn(
-                          "p-3 rounded-lg mb-1 flex-row items-center justify-between",
-                          String(option.value) === String(value)
-                            ? "bg-secondary"
-                            : "bg-transparent",
+                          "p-3 rounded-lg mb-1 flex-row items-center justify-between active:bg-secondary",
+                          "bg-transparent",
                         )}
                       >
-                        <Text
-                          className={cn(
-                            "text-base",
-                            String(option.value) === String(value)
-                              ? "text-primary font-semibold"
-                              : "text-foreground",
+                        <View className="flex-row items-center">
+                          {settingKey === "user_color_scheme" && (
+                            <ThemePreview
+                              scheme={option.value as ColorSchemeName}
+                              appearance={theme}
+                            />
                           )}
-                        >
-                          {String(option.label)}
-                        </Text>
+                          <Text
+                            className={cn(
+                              "text-base",
+                              String(option.value) === String(value)
+                                ? "text-primary font-semibold"
+                                : "text-foreground",
+                            )}
+                          >
+                            {String(option.label)}
+                          </Text>
+                        </View>
                         {String(option.value) === String(value) && (
                           <Text className="text-primary">✓</Text>
                         )}
@@ -158,15 +173,23 @@ export function SettingItem({
                     : "bg-background border-border",
                 )}
               >
-                <Text
-                  className={cn(
-                    String(option.value) === String(value)
-                      ? "text-primary-foreground font-semibold"
-                      : "text-foreground",
+                <View className="flex-row items-center">
+                  {settingKey === "user_color_scheme" && (
+                    <ThemePreview
+                      scheme={option.value as ColorSchemeName}
+                      appearance={theme}
+                    />
                   )}
-                >
-                  {String(option.label)}
-                </Text>
+                  <Text
+                    className={cn(
+                      String(option.value) === String(value)
+                        ? "text-primary-foreground font-semibold"
+                        : "text-foreground",
+                    )}
+                  >
+                    {String(option.label)}
+                  </Text>
+                </View>
               </Pressable>
             ))}
           </View>
