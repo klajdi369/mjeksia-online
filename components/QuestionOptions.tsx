@@ -60,7 +60,7 @@ export const QuestionOptions: React.FC<QuestionOptionsProps> = ({
             key={letter}
             disabled={disabled}
             className={cn(
-              "border-2 px-4 py-3 rounded-xl active:opacity-80 justify-center transition-all",
+              "border-2 px-4 py-3 rounded-xl active:opacity-80 justify-center",
               containerStyle,
             )}
             onPress={() => onOptionPress(letter)}
