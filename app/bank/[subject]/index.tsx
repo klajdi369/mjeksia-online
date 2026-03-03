@@ -15,8 +15,12 @@ export default function BankSubcategories() {
     subject?: string | null;
     subcategory?: string | null;
   }) => {
-    console.log("startFocusedTest placeholder", scope);
-    // TODO: implement navigation to a focused test session
+    router.push({
+      pathname: "/focus-test",
+      params: {
+        subject: scope.subject || "",
+      },
+    });
   };
 
   return (

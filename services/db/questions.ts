@@ -1,5 +1,5 @@
 import * as schema from "@/services/db/schema";
-import { sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { DbType } from "./types";
 
 export async function getRandomQuestion(db: DbType) {
@@ -16,6 +16,33 @@ export async function loadNQuestions(db: DbType, number: number) {
   const result = await db
     .select()
     .from(schema.questions)
+    .orderBy(sql`RANDOM()`)
+    .limit(number);
+
+  return result;
+}
+
+export async function loadNFocusedQuestions(
+  db: DbType,
+  number: number,
+  subject: string,
+  subcategory?: string | null,
+) {
+  const { CATEGORIES } = await import("@/constants/categories");
+
+  let conditions;
+  if (subcategory) {
+    conditions = eq(schema.questions.exam_title, subcategory);
+  } else {
+    const subcategories = CATEGORIES[subject] || [];
+    if (subcategories.length === 0) return [];
+    conditions = inArray(schema.questions.exam_title, subcategories);
+  }
+
+  const result = await db
+    .select()
+    .from(schema.questions)
+    .where(conditions)
     .orderBy(sql`RANDOM()`)
     .limit(number);
 
