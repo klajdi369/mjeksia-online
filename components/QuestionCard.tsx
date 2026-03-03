@@ -30,7 +30,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       onPress={onPress}
       disabled={!onPress}
     >
-      <View className="bg-secondary/60 px-5 py-3 flex-row items-center justify-between border-b border-border/50">
+      <View className="bg-secondary px-5 py-3 flex-row items-center justify-between border-b border-border/50">
         <View className="flex-row items-center">
           <View className="w-7 h-7 rounded-full bg-background items-center justify-center mr-3 border border-border">
             <Text className="text-xs font-bold text-foreground">
@@ -69,7 +69,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               </Text>
             </View>
           )}
-          <Ionicons name="help-circle" size={18} color="#a1a1aa" />
         </View>
       </View>
       <View className="p-5">
