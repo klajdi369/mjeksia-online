@@ -21,7 +21,7 @@ export const OverviewModal = ({
   return (
     <Modal visible={visible} transparent={true} animationType="fade">
       <View className="flex-1 bg-card/50 justify-center items-center p-4">
-        <View className="w-[90%] bg-card border border-border p-6 rounded-md">
+        <View className="w-[90%] bg-card border border-border p-6 rounded-lg">
           <Text className="text-2xl text-card-foreground font-bold mb-6">
             Rezultati i Testit
           </Text>

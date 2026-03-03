@@ -22,7 +22,7 @@ export const ConfirmModal = ({
       onRequestClose={onCancel}
     >
       <View className="flex-1 bg-card/50 justify-center items-center p-4">
-        <View className="w-[85%] bg-card border border-border p-4 rounded-md">
+        <View className="w-[85%] bg-card border border-border p-4 rounded-lg">
           <Text className="text-lg text-card-foreground">Perfundo testin?</Text>
           {unansweredCount > 0 && (
             <Text className="text-card-foreground mt-2">
