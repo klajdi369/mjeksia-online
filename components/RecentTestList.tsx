@@ -1,5 +1,5 @@
 import { useDrizzle } from "@/hooks/useDrizzle";
-import { formatDate } from "@/lib/utils";
+import { formatDate, truncateString } from "@/lib/utils";
 import { testSessions } from "@/services/db/schema";
 import { getRecentTests } from "@/services/db/testSessions";
 import { InferSelectModel } from "drizzle-orm";
@@ -56,8 +56,9 @@ const RecentTestList = () => {
               <Text className="text-lg font-medium text-card-foreground">
                 Model Testi #{test.id}
               </Text>
-              <Text className="text-sm text-muted-foreground">
-                Data: {formatDate(test.createdAt)}
+              <Text className="text-sm text-muted-foreground w-64">
+                {formatDate(test.createdAt)} -{" "}
+                {truncateString(test.topic || "", 20)}
               </Text>
             </View>
             <View
