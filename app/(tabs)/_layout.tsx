@@ -23,7 +23,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Kryefaqja",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "home-sharp" : "home-outline"}
@@ -34,19 +34,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="mistakes"
+        name="history"
         options={{
-          title: "Mistakes",
-          // headerRight: () => (
-          //   <View style={{ marginRight: 15 }}>
-          //     <Text style={{ color: getThemeColor("--primary", colorScheme) }}>
-          //       {5} Items
-          //     </Text>
-          //   </View>
-          // ),
+          title: "Historia",
+          headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "close-circle-sharp" : "close-circle-outline"}
+              name={focused ? "time-sharp" : "time-outline"}
               color={color}
               size={24}
             />
@@ -56,7 +50,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: "Cilesimet",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "settings-sharp" : "settings-outline"}
