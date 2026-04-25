@@ -15,7 +15,7 @@ import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { ActivityIndicator, Platform, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
@@ -24,6 +24,9 @@ export default function RootLayout() {
   const { scheme, theme, isDark } = useAppTheme();
   const [isReady, setIsReady] = useState(false);
   const hasHiddenSplash = useRef(false);
+
+  const isWebSqliteSupported =
+    Platform.OS !== "web" || typeof SharedArrayBuffer !== "undefined";
 
   // Initialize global settings effects (e.g., Theme propagation)
   useSettingsSideEffects();
@@ -49,6 +52,23 @@ export default function RootLayout() {
   }, [isReady]);
 
   if (!isReady) return null;
+
+  if (!isWebSqliteSupported) {
+    return (
+      <SafeAreaProvider>
+        <View className="flex-1 items-center justify-center bg-background px-6">
+          <Text className="text-center text-lg font-semibold text-foreground">
+            Web preview needs SharedArrayBuffer support
+          </Text>
+          <Text className="mt-3 text-center text-sm text-muted-foreground">
+            This Codespaces preview is missing required cross-origin isolation
+            headers for expo-sqlite. Open the app on native, or deploy web with
+            COOP/COEP headers enabled.
+          </Text>
+        </View>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
