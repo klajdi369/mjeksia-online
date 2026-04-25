@@ -25,8 +25,13 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const hasHiddenSplash = useRef(false);
 
+  const hasSharedArrayBuffer =
+    typeof SharedArrayBuffer !== "undefined";
+  const hasOPFS =
+    typeof navigator !== "undefined" &&
+    typeof navigator.storage?.getDirectory === "function";
   const isWebSqliteSupported =
-    Platform.OS !== "web" || typeof SharedArrayBuffer !== "undefined";
+    Platform.OS !== "web" || (hasSharedArrayBuffer && hasOPFS);
   // Use a dedicated web DB file to avoid stale empty DBs created in earlier previews.
   const databaseName = Platform.OS === "web" ? "questions-web.db" : "questions.db";
 
@@ -63,9 +68,9 @@ export default function RootLayout() {
             Web preview needs SharedArrayBuffer support
           </Text>
           <Text className="mt-3 text-center text-sm text-muted-foreground">
-            This Codespaces preview is missing required cross-origin isolation
-            headers for expo-sqlite. Open the app on native, or deploy web with
-            COOP/COEP headers enabled.
+            This environment is missing browser APIs required by expo-sqlite
+            on web (SharedArrayBuffer + OPFS). Open the app on native, or use
+            a web runtime that supports those APIs with COOP/COEP enabled.
           </Text>
         </View>
       </SafeAreaProvider>
