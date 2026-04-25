@@ -19,7 +19,7 @@ interface MathSvgData {
 }
 
 interface MathTextProps {
-  text: string;
+  text?: string | null;
   color?: string;
   fontSize?: number;
   className?: string;
@@ -30,7 +30,7 @@ interface MathTextProps {
 const EX_RATIO = 0.5;
 
 const MathText = ({
-  text,
+  text = "",
   className,
   style,
   color = "black",
@@ -42,8 +42,10 @@ const MathText = ({
   const [svgDataMap, setSvgDataMap] = useState<Record<string, MathSvgData>>({});
   const fetchedHashes = useRef<Set<string>>(new Set());
 
+  const normalizedText = typeof text === "string" ? text : "";
+
   const mathPieces = useMemo(() => {
-    return text.split(/(\$[^$]+\$)/g).map((piece, index) => {
+    return normalizedText.split(/(\$[^$]+\$)/g).map((piece, index) => {
       const isMath = piece.startsWith("$") && piece.endsWith("$");
       const rawFormula = isMath ? piece.slice(1, -1) : piece;
       return {
@@ -53,7 +55,7 @@ const MathText = ({
         hash: isMath ? getHashedPiece(rawFormula) : null,
       };
     });
-  }, [text]);
+  }, [normalizedText]);
 
   useEffect(() => {
     const fetchSvgs = async () => {
