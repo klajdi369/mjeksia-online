@@ -2,13 +2,49 @@
 
 An interactive digital platform built for medical students, helping them prepare for their exams.
 
-### ⚠️ Warning
+## Platforms
 
-This application only works on Android and does not yet support iOS. Attempting to run it on any other platform will not work.
+- ✅ Android app
+- ✅ Web (including installable PWA)
+- ⚠️ iOS support is still limited
 
 ## Downloading
 
 For the time being this app is not available in the Google Play Store. You can download the APK file from the [Releases](https://github.com/Notava1ble/mjeksia-online/releases) page, after which you will need to manually sideload it on your device.
+
+## Local Development
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (LTS)
+- [pnpm](https://pnpm.io/)
+
+### Setup
+
+```bash
+pnpm install
+```
+
+### Run the app
+
+```bash
+# Web
+pnpm web
+
+# Android
+pnpm android
+```
+
+> If `expo start --web` shows `expo: command not found`, that means Expo CLI is not installed globally.
+> Use `pnpm web` (recommended) or `pnpm exec expo start --web` instead.
+
+### Build web static output (PWA)
+
+```bash
+pnpm exec expo export -p web
+```
+
+This generates a deployable web build in `dist/`.
 
 ### Features
 
@@ -23,7 +59,7 @@ For the time being this app is not available in the Google Play Store. You can d
 This app is for medical students in Albania preparing for their state exams.
 
 **2. Does it require an internet connection?**
-No, it does not require an internet connection. The question bank and test history are stored locally on your device.
+No, it does not require an internet connection. The question bank and test history are stored locally on your device. The PWA can also be installed on web browsers for a native-like experience.
 
 **3. How does the "Mock Exam" work?**
 When you start a "Model Testi", the application generates a comprehensive session with a set number of questions. It tracks the time left and calculates your final score based on your selected answers, mimicking the pressure of an actual medical exam.
