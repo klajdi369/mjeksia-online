@@ -75,12 +75,21 @@ export default function RootLayout() {
             assetSource={{ assetId: require("@/assets/data.db") }}
             useSuspense
           >
+            {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
             <Content scheme={scheme} theme={theme} />
           </SQLiteProvider>
         </Suspense>
       </View>
     </SafeAreaProvider>
   );
+}
+
+function DrizzleStudioDevtools() {
+  const db = useSQLiteContext();
+
+  useDrizzleStudio(db);
+
+  return null;
 }
 
 function Content({
@@ -90,9 +99,6 @@ function Content({
   scheme: ColorSchemeName;
   theme: AppearanceName;
 }) {
-  const db = useSQLiteContext();
-  useDrizzleStudio(db);
-
   return (
     <Stack
       screenOptions={{
