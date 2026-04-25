@@ -1,0 +1,53 @@
+import * as schema from "@/services/db/schema";
+import { drizzle } from "drizzle-orm/sqlite-proxy";
+import { deserializeDatabaseAsync, type SQLiteDatabase } from "expo-sqlite";
+import { Asset } from "expo-asset";
+
+let dbPromise: Promise<SQLiteDatabase> | null = null;
+
+async function getWebSQLiteDatabase() {
+  if (dbPromise) return dbPromise;
+
+  dbPromise = (async () => {
+    const asset = await Asset.fromModule(require("@/assets/data.db")).downloadAsync();
+
+    if (!asset.localUri) {
+      throw new Error("Failed to resolve bundled questions database asset.");
+    }
+
+    const response = await fetch(asset.localUri);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch bundled DB asset: ${response.statusText}`);
+    }
+
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return deserializeDatabaseAsync(bytes);
+  })();
+
+  return dbPromise;
+}
+
+export const webDrizzleDb = drizzle(
+  async (query, params, method) => {
+    const db = await getWebSQLiteDatabase();
+    const statement = await db.prepareAsync(query);
+
+    try {
+      const result = await statement.executeAsync(...params);
+
+      if (method === "run") {
+        return { rows: [] };
+      }
+
+      if (method === "get") {
+        const first = await result.getFirstAsync();
+        return { rows: first ? [first] : [] };
+      }
+
+      return { rows: await result.getAllAsync() };
+    } finally {
+      await statement.finalizeAsync();
+    }
+  },
+  { schema },
+);

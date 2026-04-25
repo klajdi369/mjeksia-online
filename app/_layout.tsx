@@ -25,14 +25,8 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [sqliteError, setSqliteError] = useState<Error | null>(null);
   const hasHiddenSplash = useRef(false);
+  const isWeb = Platform.OS === ("web" as typeof Platform.OS);
 
-  const hasSharedArrayBuffer =
-    typeof SharedArrayBuffer !== "undefined";
-  const hasOPFS =
-    typeof navigator !== "undefined" &&
-    typeof navigator.storage?.getDirectory === "function";
-  const isWebSqliteSupported =
-    Platform.OS !== "web" || (hasSharedArrayBuffer && hasOPFS);
   const databaseName = "questions.db";
 
   // Initialize global settings effects (e.g., Theme propagation)
@@ -75,23 +69,6 @@ export default function RootLayout() {
     );
   }
 
-  if (!isWebSqliteSupported) {
-    return (
-      <SafeAreaProvider>
-        <View className="flex-1 items-center justify-center bg-background px-6">
-          <Text className="text-center text-lg font-semibold text-foreground">
-            Web preview needs SharedArrayBuffer support
-          </Text>
-          <Text className="mt-3 text-center text-sm text-muted-foreground">
-            This environment is missing browser APIs required by expo-sqlite
-            on web (SharedArrayBuffer + OPFS). Open the app on native, or use
-            a web runtime that supports those APIs with COOP/COEP enabled.
-          </Text>
-        </View>
-      </SafeAreaProvider>
-    );
-  }
-
   return (
     <SafeAreaProvider>
       <View
@@ -105,16 +82,20 @@ export default function RootLayout() {
           translucent={false}
           backgroundColor={getThemeColor("--background", scheme, theme)}
         />
-        <SQLiteProvider
-          databaseName={databaseName}
-          assetSource={{
-            assetId: require("@/assets/data.db"),
-          }}
-          onError={setSqliteError}
-        >
-          {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
+        {isWeb ? (
           <Content scheme={scheme} theme={theme} />
-        </SQLiteProvider>
+        ) : (
+          <SQLiteProvider
+            databaseName={databaseName}
+            assetSource={{
+              assetId: require("@/assets/data.db"),
+            }}
+            onError={setSqliteError}
+          >
+            {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
+            <Content scheme={scheme} theme={theme} />
+          </SQLiteProvider>
+        )}
       </View>
     </SafeAreaProvider>
   );

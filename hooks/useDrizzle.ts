@@ -1,5 +1,7 @@
 // hooks/useDrizzle.ts
 import * as schema from "@/services/db/schema";
+import type { DbType } from "@/services/db/types";
+import { webDrizzleDb } from "@/services/db/webDrizzle";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { useSQLiteContext } from "expo-sqlite";
@@ -7,9 +9,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import migrations from "../drizzle/migrations";
 
-export function useDrizzle() {
+function useWebDrizzle() {
+  return {
+    drizzleDb: webDrizzleDb as unknown as DbType,
+    migrationSuccess: true,
+    migrationError: undefined,
+  };
+}
+
+function useNativeDrizzle() {
   const db = useSQLiteContext();
-  const [migrationSuccess, setMigrationSuccess] = useState(Platform.OS === "web");
+  const [migrationSuccess, setMigrationSuccess] = useState(false);
   const [migrationError, setMigrationError] = useState<Error | undefined>(undefined);
 
   const drizzleDb = useMemo(() => {
@@ -17,13 +27,6 @@ export function useDrizzle() {
   }, [db]);
 
   useEffect(() => {
-    if (Platform.OS === "web") {
-      setMigrationSuccess(true);
-      setMigrationError(undefined);
-
-      return;
-    }
-
     let isCancelled = false;
 
     setMigrationSuccess(false);
@@ -49,4 +52,12 @@ export function useDrizzle() {
   }, [drizzleDb]);
 
   return { drizzleDb, migrationSuccess, migrationError };
+}
+
+export function useDrizzle() {
+  if (Platform.OS === "web") {
+    return useWebDrizzle();
+  }
+
+  return useNativeDrizzle();
 }
