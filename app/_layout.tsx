@@ -33,8 +33,7 @@ export default function RootLayout() {
     typeof navigator.storage?.getDirectory === "function";
   const isWebSqliteSupported =
     Platform.OS !== "web" || (hasSharedArrayBuffer && hasOPFS);
-  // Use a dedicated web DB file to avoid stale empty DBs created in earlier previews.
-  const databaseName = Platform.OS === "web" ? "questions-web.db" : "questions.db";
+  const databaseName = "questions.db";
 
   // Initialize global settings effects (e.g., Theme propagation)
   useSettingsSideEffects();
@@ -110,7 +109,6 @@ export default function RootLayout() {
           databaseName={databaseName}
           assetSource={{
             assetId: require("@/assets/data.db"),
-            forceOverwrite: Platform.OS === "web",
           }}
           onError={setSqliteError}
         >
