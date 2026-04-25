@@ -14,8 +14,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
   },
   android: {
+    icon: "./assets/images/icon.png",
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#ECFEFF",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -37,9 +38,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#F7FAFC",
         dark: {
-          backgroundColor: "#000000",
+          image: "./assets/images/splash-icon.png",
+          backgroundColor: "#020617",
         },
       },
     ],
