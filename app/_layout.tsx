@@ -14,8 +14,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Platform, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const { scheme, theme, isDark } = useAppTheme();
   const [isReady, setIsReady] = useState(false);
+  const [sqliteError, setSqliteError] = useState<Error | null>(null);
   const hasHiddenSplash = useRef(false);
 
   const hasSharedArrayBuffer =
@@ -60,6 +61,21 @@ export default function RootLayout() {
 
   if (!isReady) return null;
 
+  if (sqliteError) {
+    return (
+      <SafeAreaProvider>
+        <View className="flex-1 items-center justify-center bg-background px-6">
+          <Text className="text-center text-lg font-semibold text-foreground">
+            Database failed to initialize on web preview
+          </Text>
+          <Text className="mt-3 text-center text-sm text-muted-foreground">
+            {sqliteError.message}
+          </Text>
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   if (!isWebSqliteSupported) {
     return (
       <SafeAreaProvider>
@@ -90,25 +106,17 @@ export default function RootLayout() {
           translucent={false}
           backgroundColor={getThemeColor("--background", scheme, theme)}
         />
-        <Suspense
-          fallback={
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" />
-            </View>
-          }
+        <SQLiteProvider
+          databaseName={databaseName}
+          assetSource={{
+            assetId: require("@/assets/data.db"),
+            forceOverwrite: Platform.OS === "web",
+          }}
+          onError={setSqliteError}
         >
-          <SQLiteProvider
-            databaseName={databaseName}
-            assetSource={{
-              assetId: require("@/assets/data.db"),
-              forceOverwrite: Platform.OS === "web",
-            }}
-            useSuspense
-          >
-            {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
-            <Content scheme={scheme} theme={theme} />
-          </SQLiteProvider>
-        </Suspense>
+          {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
+          <Content scheme={scheme} theme={theme} />
+        </SQLiteProvider>
       </View>
     </SafeAreaProvider>
   );
