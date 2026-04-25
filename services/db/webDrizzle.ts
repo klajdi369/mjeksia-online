@@ -33,7 +33,8 @@ export const webDrizzleDb = drizzle(
     const statement = await db.prepareAsync(query);
 
     try {
-      const result = await statement.executeAsync(...params);
+      const bindParams = Array.isArray(params) ? params : [];
+      const result = await statement.executeAsync(bindParams);
 
       if (method === "run") {
         return { rows: [] };
@@ -41,7 +42,16 @@ export const webDrizzleDb = drizzle(
 
       if (method === "get") {
         const first = await result.getFirstAsync();
-        return { rows: first ? [first] : [] };
+        return { rows: (first as any) ?? undefined };
+      }
+
+      if (method === "values") {
+        const rows = await result.getAllAsync();
+        return {
+          rows: rows.map((row: any) =>
+            Array.isArray(row) ? row : Object.values(row),
+          ),
+        };
       }
 
       return { rows: await result.getAllAsync() };
