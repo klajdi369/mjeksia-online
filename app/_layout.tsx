@@ -94,7 +94,10 @@ export default function RootLayout() {
         >
           <SQLiteProvider
             databaseName={databaseName}
-            assetSource={{ assetId: require("@/assets/data.db") }}
+            assetSource={{
+              assetId: require("@/assets/data.db"),
+              forceOverwrite: Platform.OS === "web",
+            }}
             useSuspense
           >
             {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
