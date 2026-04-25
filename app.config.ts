@@ -36,7 +36,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     display: "standalone",
   },
   plugins: [
-    "expo-router",
+    [
+      "expo-router",
+      {
+        headers: {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin",
+        },
+      },
+    ],
     [
       "expo-splash-screen",
       {

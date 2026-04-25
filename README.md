@@ -46,6 +46,16 @@ pnpm exec expo export -p web
 
 This generates a deployable web build in `dist/`.
 
+### Codespaces note (SharedArrayBuffer)
+
+`expo-sqlite` on web requires cross-origin isolation headers:
+
+- `Cross-Origin-Embedder-Policy: credentialless`
+- `Cross-Origin-Opener-Policy: same-origin`
+
+These are configured in `app.config.ts` via the `expo-router` plugin headers.
+If a preview proxy strips these headers, web SQLite will still fail and you should test via a deployment target that preserves response headers.
+
 ### Features
 
 - **Arena (Pyetje të Çfarëdoshme / Random Questions):** Practice your knowledge by answering random questions on the go. Every question comes with a comprehensive explanation.
