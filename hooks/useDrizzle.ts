@@ -36,6 +36,61 @@ async function hasRequiredColumns(
   return [...requiredColumns].every((column) => existing.has(column));
 }
 
+async function ensureColumn(
+  db: ReturnType<typeof useSQLiteContext>,
+  tableName: string,
+  columnName: string,
+  columnDefinition: string,
+) {
+  const hasColumn = await hasRequiredColumns(db, tableName, new Set([columnName]));
+  if (hasColumn) return;
+  await db.execAsync(
+    `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`,
+  );
+}
+
+async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
+  await db.execAsync(
+    `CREATE TABLE IF NOT EXISTS test_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      time_left INTEGER,
+      score INTEGER NOT NULL DEFAULT 0,
+      total_questions INTEGER NOT NULL,
+      is_completed INTEGER NOT NULL DEFAULT 0,
+      topic TEXT,
+      test_type TEXT DEFAULT 'mock'
+    );`,
+  );
+
+  await db.execAsync(
+    `CREATE TABLE IF NOT EXISTS user_answers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL,
+      question_id INTEGER NOT NULL,
+      selected_option TEXT,
+      is_correct INTEGER NOT NULL,
+      answered_at INTEGER,
+      seconds_spend INTEGER DEFAULT 0,
+      correct_option TEXT NOT NULL DEFAULT '',
+      FOREIGN KEY(session_id) REFERENCES test_sessions(id) ON DELETE CASCADE,
+      FOREIGN KEY(question_id) REFERENCES questions(id)
+    );`,
+  );
+
+  await ensureColumn(db, "test_sessions", "topic", "TEXT");
+  await ensureColumn(db, "test_sessions", "test_type", "TEXT DEFAULT 'mock'");
+
+  await ensureColumn(db, "user_answers", "answered_at", "INTEGER");
+  await ensureColumn(db, "user_answers", "seconds_spend", "INTEGER DEFAULT 0");
+  await ensureColumn(
+    db,
+    "user_answers",
+    "correct_option",
+    "TEXT NOT NULL DEFAULT ''",
+  );
+}
+
 function useWebDrizzle() {
   const [migrationSuccess, setMigrationSuccess] = useState(false);
   const [migrationError, setMigrationError] = useState<Error | undefined>(
@@ -100,40 +155,34 @@ function useNativeDrizzle() {
           setMigrationSuccess(true);
         }
       })
-      .catch((error: unknown) => {
-        Promise.all([
-          hasRequiredColumns(
-            db,
-            "test_sessions",
-            REQUIRED_TEST_SESSION_COLUMNS,
-          ),
-          hasRequiredColumns(
-            db,
-            "user_answers",
-            REQUIRED_USER_ANSWER_COLUMNS,
-          ),
-        ])
-          .then(([hasSessionColumns, hasAnswerColumns]) => {
-            if (isCancelled) return;
+      .catch(async (error: unknown) => {
+        try {
+          await repairNativeSchema(db);
 
-            if (hasSessionColumns && hasAnswerColumns) {
-              setMigrationSuccess(true);
-              setMigrationError(undefined);
-              return;
-            }
+          const [hasSessionColumns, hasAnswerColumns] = await Promise.all([
+            hasRequiredColumns(db, "test_sessions", REQUIRED_TEST_SESSION_COLUMNS),
+            hasRequiredColumns(db, "user_answers", REQUIRED_USER_ANSWER_COLUMNS),
+          ]);
 
-            setMigrationError(
-              error instanceof Error ? error : new Error(String(error)),
-            );
-          })
-          .catch((schemaCheckError: unknown) => {
-            if (isCancelled) return;
-            setMigrationError(
-              schemaCheckError instanceof Error
-                ? schemaCheckError
-                : new Error(String(schemaCheckError)),
-            );
-          });
+          if (isCancelled) return;
+
+          if (hasSessionColumns && hasAnswerColumns) {
+            setMigrationSuccess(true);
+            setMigrationError(undefined);
+            return;
+          }
+
+          setMigrationError(
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        } catch (schemaRepairError: unknown) {
+          if (isCancelled) return;
+          setMigrationError(
+            schemaRepairError instanceof Error
+              ? schemaRepairError
+              : new Error(String(schemaRepairError)),
+          );
+        }
       });
 
     return () => {
