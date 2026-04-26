@@ -3,11 +3,9 @@ import * as schema from "@/services/db/schema";
 import type { DbType } from "@/services/db/types";
 import { initializeWebDb, webDrizzleDb } from "@/services/db/webDrizzle";
 import { drizzle } from "drizzle-orm/expo-sqlite";
-import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
-import migrations from "../drizzle/migrations";
 
 const REQUIRED_TEST_SESSION_COLUMNS = new Set(["topic", "test_type"]);
 const REQUIRED_USER_ANSWER_COLUMNS = new Set([
@@ -149,40 +147,30 @@ function useNativeDrizzle() {
     setMigrationSuccess(false);
     setMigrationError(undefined);
 
-    migrate(drizzleDb, migrations)
-      .then(() => {
-        if (!isCancelled) {
+    repairNativeSchema(db)
+      .then(async () => {
+        const [hasSessionColumns, hasAnswerColumns] = await Promise.all([
+          hasRequiredColumns(db, "test_sessions", REQUIRED_TEST_SESSION_COLUMNS),
+          hasRequiredColumns(db, "user_answers", REQUIRED_USER_ANSWER_COLUMNS),
+        ]);
+
+        if (isCancelled) return;
+
+        if (hasSessionColumns && hasAnswerColumns) {
           setMigrationSuccess(true);
+          setMigrationError(undefined);
+          return;
         }
+
+        setMigrationError(
+          new Error("Native database schema is missing required columns."),
+        );
       })
-      .catch(async (error: unknown) => {
-        try {
-          await repairNativeSchema(db);
-
-          const [hasSessionColumns, hasAnswerColumns] = await Promise.all([
-            hasRequiredColumns(db, "test_sessions", REQUIRED_TEST_SESSION_COLUMNS),
-            hasRequiredColumns(db, "user_answers", REQUIRED_USER_ANSWER_COLUMNS),
-          ]);
-
-          if (isCancelled) return;
-
-          if (hasSessionColumns && hasAnswerColumns) {
-            setMigrationSuccess(true);
-            setMigrationError(undefined);
-            return;
-          }
-
-          setMigrationError(
-            error instanceof Error ? error : new Error(String(error)),
-          );
-        } catch (schemaRepairError: unknown) {
-          if (isCancelled) return;
-          setMigrationError(
-            schemaRepairError instanceof Error
-              ? schemaRepairError
-              : new Error(String(schemaRepairError)),
-          );
-        }
+      .catch((error: unknown) => {
+        if (isCancelled) return;
+        setMigrationError(
+          error instanceof Error ? error : new Error(String(error)),
+        );
       });
 
     return () => {
