@@ -49,14 +49,13 @@ export const webDrizzleDb = drizzle(
     const statement = await db.prepareAsync(query);
 
     try {
-      const bindParams = Array.isArray(params)
-        ? params
+      const result = Array.isArray(params)
+        ? await statement.executeAsync(...params)
         : params && typeof params === "object"
-          ? Object.values(params)
+          ? await statement.executeAsync(params as Record<string, any>)
           : typeof params === "undefined"
-            ? []
-            : [params];
-      const result = await statement.executeAsync(bindParams);
+            ? await statement.executeAsync([])
+            : await statement.executeAsync(params as any);
 
       if (method === "run") {
         return { rows: [] };
