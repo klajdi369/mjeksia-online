@@ -14,6 +14,36 @@ const setCachedDbPromise = (promise: Promise<SQLiteDatabase>) => {
   globalThis.__mjeksiaWebDbPromise = promise;
 };
 
+async function ensureWebAppTables(db: SQLiteDatabase) {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS test_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      time_left INTEGER,
+      score INTEGER NOT NULL DEFAULT 0,
+      total_questions INTEGER NOT NULL,
+      is_completed INTEGER NOT NULL DEFAULT 0,
+      topic TEXT,
+      test_type TEXT DEFAULT 'mock'
+    );
+  `);
+
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS user_answers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL,
+      question_id INTEGER NOT NULL,
+      selected_option TEXT,
+      is_correct INTEGER NOT NULL,
+      answered_at INTEGER,
+      seconds_spend INTEGER DEFAULT 0,
+      correct_option TEXT NOT NULL,
+      FOREIGN KEY(session_id) REFERENCES test_sessions(id) ON DELETE CASCADE,
+      FOREIGN KEY(question_id) REFERENCES questions(id)
+    );
+  `);
+}
+
 async function getWebSQLiteDatabase() {
   const cachedPromise = getCachedDbPromise();
   if (cachedPromise) return cachedPromise;
@@ -31,7 +61,9 @@ async function getWebSQLiteDatabase() {
     }
 
     const bytes = new Uint8Array(await response.arrayBuffer());
-    return deserializeDatabaseAsync(bytes);
+    const db = await deserializeDatabaseAsync(bytes);
+    await ensureWebAppTables(db);
+    return db;
   })();
 
   setCachedDbPromise(
