@@ -18,8 +18,10 @@ const setCachedDbPromise = (promise: Promise<SQLiteDatabase>) => {
 };
 
 async function ensureWebAppTables(db: SQLiteDatabase) {
-  await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS test_sessions (
+  // Use runAsync instead of execAsync because execAsync on web WASM can throw
+  // SQLITE_DONE (101) "no more rows available" for DDL that produces no result set.
+  await db.runAsync(
+    `CREATE TABLE IF NOT EXISTS test_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
       time_left INTEGER,
@@ -28,11 +30,11 @@ async function ensureWebAppTables(db: SQLiteDatabase) {
       is_completed INTEGER NOT NULL DEFAULT 0,
       topic TEXT,
       test_type TEXT DEFAULT 'mock'
-    );
-  `);
+    );`,
+  );
 
-  await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS user_answers (
+  await db.runAsync(
+    `CREATE TABLE IF NOT EXISTS user_answers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       session_id INTEGER NOT NULL,
       question_id INTEGER NOT NULL,
@@ -43,8 +45,8 @@ async function ensureWebAppTables(db: SQLiteDatabase) {
       correct_option TEXT NOT NULL,
       FOREIGN KEY(session_id) REFERENCES test_sessions(id) ON DELETE CASCADE,
       FOREIGN KEY(question_id) REFERENCES questions(id)
-    );
-  `);
+    );`,
+  );
 }
 
 async function getWebSQLiteDatabase() {
@@ -105,6 +107,13 @@ export async function initializeWebDb() {
   }
 }
 
+function isSqliteDoneError(err: unknown): boolean {
+  if (err instanceof Error) {
+    return err.message.includes("101") || err.message.includes("no more rows");
+  }
+  return false;
+}
+
 export const webDrizzleDb = drizzle(
   async (query, params, method) => {
     const db = await getWebSQLiteDatabase();
@@ -140,22 +149,38 @@ export const webDrizzleDb = drizzle(
 
       // Web sometimes returns rows directly instead of a statement result object.
       const isDirectRows = Array.isArray(result);
-      const getRows = async () =>
-        isDirectRows ? result : await result.getAllAsync();
-      const getFirst = async () =>
-        isDirectRows ? result[0] ?? undefined : await result.getFirstAsync();
+
+      const safeGetAll = async (): Promise<any[]> => {
+        if (isDirectRows) return result;
+        try {
+          return await result.getAllAsync();
+        } catch (err) {
+          if (isSqliteDoneError(err)) return [];
+          throw err;
+        }
+      };
+
+      const safeGetFirst = async (): Promise<any> => {
+        if (isDirectRows) return result[0] ?? undefined;
+        try {
+          return (await result.getFirstAsync()) ?? undefined;
+        } catch (err) {
+          if (isSqliteDoneError(err)) return undefined;
+          throw err;
+        }
+      };
 
       if (method === "run") {
         return { rows: [] };
       }
 
       if (method === "get") {
-        const first = await getFirst();
-        return { rows: (first as any) ?? undefined };
+        const first = await safeGetFirst();
+        return { rows: first };
       }
 
       if (method === "values") {
-        const rows = await getRows();
+        const rows = await safeGetAll();
         return {
           rows: rows.map((row: any) =>
             Array.isArray(row) ? row : Object.values(row),
@@ -163,7 +188,7 @@ export const webDrizzleDb = drizzle(
         };
       }
 
-      return { rows: await getRows() };
+      return { rows: await safeGetAll() };
     } finally {
       try {
         await statement.finalizeAsync();
