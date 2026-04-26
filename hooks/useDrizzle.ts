@@ -42,13 +42,13 @@ async function ensureColumn(
 ) {
   const hasColumn = await hasRequiredColumns(db, tableName, new Set([columnName]));
   if (hasColumn) return;
-  await db.execAsync(
+  await db.runAsync(
     `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`,
   );
 }
 
 async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
-  await db.execAsync(
+  await db.runAsync(
     `CREATE TABLE IF NOT EXISTS test_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
@@ -61,7 +61,7 @@ async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
     );`,
   );
 
-  await db.execAsync(
+  await db.runAsync(
     `CREATE TABLE IF NOT EXISTS user_answers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       session_id INTEGER NOT NULL,
