@@ -2,7 +2,16 @@ import { questions } from "@/services/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 import * as Haptics from "expo-haptics";
 import { useCallback, useMemo, useState } from "react";
+import { Platform } from "react-native";
 import { useCountdownTimer } from "./useCountdownTimer";
+
+const isWeb = Platform.OS === "web";
+
+function hapticImpact(style: Haptics.ImpactFeedbackStyle) {
+  if (!isWeb) {
+    Haptics.impactAsync(style);
+  }
+}
 
 type Question = InferSelectModel<typeof questions>;
 type Guess = "A" | "B" | "C" | "D" | undefined;
@@ -129,7 +138,7 @@ export const useTestEngine = ({
         setGuesses((prev) => {
           if (prev[index] === letter) return prev;
           if (remainingSeconds >= 6) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            hapticImpact(Haptics.ImpactFeedbackStyle.Light);
           }
           const newGuesses = [...prev];
           newGuesses[index] = letter;
@@ -159,7 +168,7 @@ export const useTestEngine = ({
       return;
     }
     if (remainingSeconds >= 6) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      hapticImpact(Haptics.ImpactFeedbackStyle.Medium);
     }
     setIsConfirmModalOpen(true);
   }, [currentIndex, allQuestions, remainingSeconds]);

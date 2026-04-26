@@ -57,10 +57,14 @@ async function getWebSQLiteDatabase() {
     const db =
       (await cachedPromise) ??
       (await (async () => {
-        const asset = await Asset.fromModule(require("@/assets/data.db")).downloadAsync();
+        const asset = await Asset.fromModule(
+          require("@/assets/data.db"),
+        ).downloadAsync();
 
         if (!asset.localUri) {
-          throw new Error("Failed to resolve bundled questions database asset.");
+          throw new Error(
+            "Failed to resolve bundled questions database asset.",
+          );
         }
 
         const response = await fetch(asset.localUri);
@@ -89,52 +93,69 @@ async function getWebSQLiteDatabase() {
   return globalThis.__mjeksiaWebDbReadyPromise;
 }
 
+export async function initializeWebDb() {
+  try {
+    await getWebSQLiteDatabase();
+    return { success: true as const, error: undefined };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
+}
+
 export const webDrizzleDb = drizzle(
   async (query, params, method) => {
     const db = await getWebSQLiteDatabase();
     const statement = await db.prepareAsync(query);
 
     try {
-      const executeWithBoundParams = async () => {
-        if (Array.isArray(params)) {
-          return await statement.executeAsync(...params);
+      let result: any;
+
+      if (Array.isArray(params) && params.length === 0) {
+        result = await statement.executeAsync();
+      } else if (Array.isArray(params)) {
+        result = await statement.executeAsync(...params);
+      } else if (params && typeof params === "object") {
+        const entries = Object.entries(params);
+        const hasOnlyNumericKeys =
+          entries.length > 0 && entries.every(([key]) => /^\d+$/.test(key));
+
+        if (hasOnlyNumericKeys) {
+          const orderedValues = entries
+            .sort(([a], [b]) => Number(a) - Number(b))
+            .map(([, value]) => value as any);
+          result = await statement.executeAsync(...orderedValues);
+        } else {
+          result = await statement.executeAsync(
+            params as Record<string, any>,
+          );
         }
+      } else if (typeof params === "undefined") {
+        result = await statement.executeAsync();
+      } else {
+        result = await statement.executeAsync(params as any);
+      }
 
-        if (params && typeof params === "object") {
-          const entries = Object.entries(params);
-          const hasOnlyNumericKeys =
-            entries.length > 0 && entries.every(([key]) => /^\d+$/.test(key));
-
-          if (hasOnlyNumericKeys) {
-            const orderedValues = entries
-              .sort(([a], [b]) => Number(a) - Number(b))
-              .map(([, value]) => value as any);
-            return await statement.executeAsync(...orderedValues);
-          }
-
-          return await statement.executeAsync(params as Record<string, any>);
-        }
-
-        if (typeof params === "undefined") {
-          return await statement.executeAsync([]);
-        }
-
-        return await statement.executeAsync(params as any);
-      };
-
-      const result = await executeWithBoundParams();
+      // Web sometimes returns rows directly instead of a statement result object.
+      const isDirectRows = Array.isArray(result);
+      const getRows = async () =>
+        isDirectRows ? result : await result.getAllAsync();
+      const getFirst = async () =>
+        isDirectRows ? result[0] ?? undefined : await result.getFirstAsync();
 
       if (method === "run") {
         return { rows: [] };
       }
 
       if (method === "get") {
-        const first = await result.getFirstAsync();
+        const first = await getFirst();
         return { rows: (first as any) ?? undefined };
       }
 
       if (method === "values") {
-        const rows = await result.getAllAsync();
+        const rows = await getRows();
         return {
           rows: rows.map((row: any) =>
             Array.isArray(row) ? row : Object.values(row),
@@ -142,9 +163,13 @@ export const webDrizzleDb = drizzle(
         };
       }
 
-      return { rows: await result.getAllAsync() };
+      return { rows: await getRows() };
     } finally {
-      await statement.finalizeAsync();
+      try {
+        await statement.finalizeAsync();
+      } catch {
+        // Ignore finalize errors so they don't mask real query errors.
+      }
     }
   },
   { schema },
