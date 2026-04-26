@@ -5,7 +5,7 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { useDrizzle } from "@/hooks/useDrizzle";
 import { questions as questionsSchema } from "@/services/db/schema";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { InferSelectModel } from "drizzle-orm";
+import { eq, InferSelectModel } from "drizzle-orm";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -37,9 +37,10 @@ export default function BankQuestions() {
 
       setIsLoading(true);
       try {
-        const result = await drizzleDb.query.questions.findMany({
-          where: (q, { eq }) => eq(q.exam_title, examTitle),
-        });
+        const result = await drizzleDb
+          .select()
+          .from(questionsSchema)
+          .where(eq(questionsSchema.exam_title, examTitle));
         const normalized = result.filter(
           (item): item is InferSelectModel<typeof questionsSchema> =>
             item != null && typeof item.id === "number",

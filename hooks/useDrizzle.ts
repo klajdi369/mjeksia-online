@@ -54,10 +54,7 @@ function useNativeDrizzle() {
   return { drizzleDb, migrationSuccess, migrationError };
 }
 
-export function useDrizzle() {
-  if (Platform.OS === "web") {
-    return useWebDrizzle();
-  }
-
-  return useNativeDrizzle();
-}
+// Platform.OS is a compile-time constant, so selecting the hook at module load
+// time is safe and avoids a conditional hook call inside a render function.
+export const useDrizzle =
+  Platform.OS === "web" ? useWebDrizzle : useNativeDrizzle;
