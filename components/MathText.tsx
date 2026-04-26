@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   Text,
+  View,
   useWindowDimensions,
   type TextStyle,
 } from "react-native";
@@ -19,7 +20,7 @@ interface MathSvgData {
 }
 
 interface MathTextProps {
-  text: string;
+  text?: string | null;
   color?: string;
   fontSize?: number;
   className?: string;
@@ -30,7 +31,7 @@ interface MathTextProps {
 const EX_RATIO = 0.5;
 
 const MathText = ({
-  text,
+  text = "",
   className,
   style,
   color = "black",
@@ -42,8 +43,10 @@ const MathText = ({
   const [svgDataMap, setSvgDataMap] = useState<Record<string, MathSvgData>>({});
   const fetchedHashes = useRef<Set<string>>(new Set());
 
+  const normalizedText = typeof text === "string" ? text : "";
+
   const mathPieces = useMemo(() => {
-    return text.split(/(\$[^$]+\$)/g).map((piece, index) => {
+    return normalizedText.split(/(\$[^$]+\$)/g).map((piece, index) => {
       const isMath = piece.startsWith("$") && piece.endsWith("$");
       const rawFormula = isMath ? piece.slice(1, -1) : piece;
       return {
@@ -53,7 +56,7 @@ const MathText = ({
         hash: isMath ? getHashedPiece(rawFormula) : null,
       };
     });
-  }, [text]);
+  }, [normalizedText]);
 
   useEffect(() => {
     const fetchSvgs = async () => {
@@ -103,10 +106,10 @@ const MathText = ({
   }, [mathPieces, drizzleDb]);
 
   const scalePx = fontSize * EX_RATIO;
+  const availableWidth = windowWidth - paddingHorizontal;
 
   // Calculate the width of the widest SVG
   const maxContentWidth = useMemo(() => {
-    const availableWidth = windowWidth - paddingHorizontal;
     let widestSvg = 0;
 
     mathPieces.forEach((piece) => {
@@ -118,26 +121,21 @@ const MathText = ({
 
     // The text box should be at least the screen width, or the width of the largest SVG
     return Math.max(availableWidth, widestSvg);
-  }, [mathPieces, svgDataMap, scalePx, windowWidth, paddingHorizontal]);
+  }, [mathPieces, svgDataMap, scalePx, availableWidth]);
 
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={true}
-      contentContainerStyle={{ minWidth: "100%", paddingBottom: 2 }}
+  const textNode = (
+    <Text
+      className={className}
+      style={[
+        style,
+        {
+          width: maxContentWidth, // Forces the wrap boundary to the widest element
+          fontSize: fontSize,
+          color: color,
+        },
+      ]}
     >
-      <Text
-        className={className}
-        style={[
-          style,
-          {
-            width: maxContentWidth, // Forces the wrap boundary to the widest element
-            fontSize: fontSize,
-            color: color,
-          },
-        ]}
-      >
-        {mathPieces.map((piece) => {
+      {mathPieces.map((piece) => {
           if (!piece.isMath) {
             return piece.content;
           }
@@ -174,7 +172,20 @@ const MathText = ({
             />
           );
         })}
-      </Text>
+    </Text>
+  );
+
+  if (maxContentWidth <= availableWidth) {
+    return <View>{textNode}</View>;
+  }
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ minWidth: "100%", paddingBottom: 2 }}
+    >
+      {textNode}
     </ScrollView>
   );
 };

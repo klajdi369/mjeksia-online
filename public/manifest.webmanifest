@@ -1,0 +1,19 @@
+{
+  "name": "Mjeksia Online",
+  "short_name": "Mjeksia",
+  "description": "Praktiko pyetje dhe teste mjekësie online.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7FAFC",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

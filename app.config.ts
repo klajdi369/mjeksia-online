@@ -29,9 +29,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundler: "metro",
     output: "static",
     favicon: "./assets/images/favicon.png",
+    name: "Mjeksia Online",
+    shortName: "Mjeksia",
+    themeColor: "#2563EB",
+    backgroundColor: "#F7FAFC",
+    display: "standalone",
   },
   plugins: [
-    "expo-router",
+    [
+      "expo-router",
+      {
+        headers: {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin",
+        },
+      },
+    ],
     [
       "expo-splash-screen",
       {

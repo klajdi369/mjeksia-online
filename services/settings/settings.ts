@@ -1,5 +1,6 @@
 import Storage from "expo-sqlite/kv-store";
 import { useCallback, useSyncExternalStore } from "react";
+import { Platform } from "react-native";
 import type { AnySettingDef } from "./settingTypes";
 import {
   settingsDefs,
@@ -13,6 +14,22 @@ export * from "./settingsSchema";
 // --- Runtime ---
 
 const listeners = new Map<SettingsKey, Set<() => void>>();
+const isWeb = Platform.OS === "web";
+
+function readSettingRaw(storageKey: string) {
+  if (isWeb && typeof localStorage !== "undefined") {
+    return localStorage.getItem(storageKey);
+  }
+  return Storage.getItemSync(storageKey);
+}
+
+function writeSettingRaw(storageKey: string, value: string) {
+  if (isWeb && typeof localStorage !== "undefined") {
+    localStorage.setItem(storageKey, value);
+    return;
+  }
+  Storage.setItemSync(storageKey, value);
+}
 
 function subscribe(key: SettingsKey, cb: () => void) {
   if (!listeners.has(key)) listeners.set(key, new Set());
@@ -24,9 +41,10 @@ function subscribe(key: SettingsKey, cb: () => void) {
 
 export function getSetting<K extends SettingsKey>(key: K): SettingValue<K> {
   const def: AnySettingDef = settingsDefs[key];
+  const storageKey = `setting_${key}`;
 
   try {
-    const raw = Storage.getItemSync(`setting_${key}`);
+    const raw = readSettingRaw(storageKey);
 
     if (raw !== null) {
       if (def.type === "select") {
@@ -48,6 +66,7 @@ export function setSetting<K extends SettingsKey>(
   value: SettingValue<K>,
 ) {
   const def: AnySettingDef = settingsDefs[key];
+  const storageKey = `setting_${key}`;
 
   if (def.type === "select") {
     if (!def.options.some((o) => o.value === String(value))) {
@@ -57,7 +76,7 @@ export function setSetting<K extends SettingsKey>(
   }
 
   try {
-    Storage.setItemSync(`setting_${key}`, String(value));
+    writeSettingRaw(storageKey, String(value));
   } catch (e) {
     console.warn(`Failed to write setting "${key}":`, e);
     return;

@@ -14,10 +14,17 @@ const RecentTestList = () => {
   const [recentTests, setRecentTests] = useState<
     InferSelectModel<typeof testSessions>[] | undefined
   >();
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const fetchTests = useCallback(async () => {
-    const response = await getRecentTests(drizzleDb, 3);
-    setRecentTests(response);
+    try {
+      const response = await getRecentTests(drizzleDb, 3);
+      setRecentTests(response);
+      setLoadError(null);
+    } catch (error: unknown) {
+      setRecentTests([]);
+      setLoadError(error instanceof Error ? error.message : String(error));
+    }
   }, [drizzleDb]);
 
   useFocusEffect(
@@ -31,6 +38,14 @@ const RecentTestList = () => {
     await fetchTests();
     setRefreshing(false);
   }, [fetchTests]);
+
+  if (loadError) {
+    return (
+      <Text className="text-muted-foreground">
+        Test history is unavailable on this web preview. ({loadError})
+      </Text>
+    );
+  }
 
   if (!recentTests || recentTests.length === 0) {
     return (
