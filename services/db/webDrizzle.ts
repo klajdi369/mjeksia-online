@@ -53,7 +53,9 @@ export const webDrizzleDb = drizzle(
         ? params
         : params && typeof params === "object"
           ? Object.values(params)
-          : [];
+          : typeof params === "undefined"
+            ? []
+            : [params];
       const result = await statement.executeAsync(bindParams);
 
       if (method === "run") {
