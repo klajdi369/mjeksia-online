@@ -7,6 +7,15 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 
+function toErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function wrapDbError(context: string, error: unknown) {
+  return new Error(`${context}. SQLite error: ${toErrorMessage(error)}`);
+}
+
 async function ensureColumn(
   db: ReturnType<typeof useSQLiteContext>,
   tableName: string,
@@ -24,39 +33,50 @@ async function ensureColumn(
       message.includes("already exists");
 
     if (!isDuplicateColumn) {
-      throw error;
+      throw wrapDbError(
+        `Failed to add column '${columnName}' on table '${tableName}'`,
+        error,
+      );
     }
   }
 }
 
 async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
-  await db.runAsync(
-    `CREATE TABLE IF NOT EXISTS test_sessions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-      time_left INTEGER,
-      score INTEGER NOT NULL DEFAULT 0,
-      total_questions INTEGER NOT NULL,
-      is_completed INTEGER NOT NULL DEFAULT 0,
-      topic TEXT,
-      test_type TEXT DEFAULT 'mock'
-    );`,
-  );
+  try {
+    await db.runAsync(
+      `CREATE TABLE IF NOT EXISTS test_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+        time_left INTEGER,
+        score INTEGER NOT NULL DEFAULT 0,
+        total_questions INTEGER NOT NULL,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        topic TEXT,
+        test_type TEXT DEFAULT 'mock'
+      );`,
+    );
+  } catch (error: unknown) {
+    throw wrapDbError("Failed creating/verifying 'test_sessions' table", error);
+  }
 
-  await db.runAsync(
-    `CREATE TABLE IF NOT EXISTS user_answers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_id INTEGER NOT NULL,
-      question_id INTEGER NOT NULL,
-      selected_option TEXT,
-      is_correct INTEGER NOT NULL,
-      answered_at INTEGER,
-      seconds_spend INTEGER DEFAULT 0,
-      correct_option TEXT NOT NULL DEFAULT '',
-      FOREIGN KEY(session_id) REFERENCES test_sessions(id) ON DELETE CASCADE,
-      FOREIGN KEY(question_id) REFERENCES questions(id)
-    );`,
-  );
+  try {
+    await db.runAsync(
+      `CREATE TABLE IF NOT EXISTS user_answers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        question_id INTEGER NOT NULL,
+        selected_option TEXT,
+        is_correct INTEGER NOT NULL,
+        answered_at INTEGER,
+        seconds_spend INTEGER DEFAULT 0,
+        correct_option TEXT NOT NULL DEFAULT '',
+        FOREIGN KEY(session_id) REFERENCES test_sessions(id) ON DELETE CASCADE,
+        FOREIGN KEY(question_id) REFERENCES questions(id)
+      );`,
+    );
+  } catch (error: unknown) {
+    throw wrapDbError("Failed creating/verifying 'user_answers' table", error);
+  }
 
   await ensureColumn(db, "test_sessions", "topic", "TEXT");
   await ensureColumn(db, "test_sessions", "test_type", "TEXT DEFAULT 'mock'");
@@ -138,7 +158,7 @@ function useNativeDrizzle() {
       .catch((error: unknown) => {
         if (isCancelled) return;
         setMigrationError(
-          error instanceof Error ? error : new Error(String(error)),
+          wrapDbError("Native database bootstrap failed", error),
         );
       });
 
