@@ -18,7 +18,7 @@ import {
 
 export default function BankQuestions() {
   const router = useRouter();
-  const { scheme, theme, isDark } = useAppTheme();
+  const { scheme, theme } = useAppTheme();
   const { subject, subcategory } = useLocalSearchParams<{
     subject: string;
     subcategory: string;
@@ -40,7 +40,11 @@ export default function BankQuestions() {
         const result = await drizzleDb.query.questions.findMany({
           where: (q, { eq }) => eq(q.exam_title, examTitle),
         });
-        setQuestions(result);
+        const normalized = result.filter(
+          (item): item is InferSelectModel<typeof questionsSchema> =>
+            item != null && typeof item.id === "number",
+        );
+        setQuestions(normalized);
       } catch (e) {
         console.error("Failed to load questions", e);
         setQuestions([]);
@@ -142,7 +146,9 @@ export default function BankQuestions() {
         ) : (
           <FlatList
             data={questions}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item, index) =>
+              item?.id != null ? String(item.id) : `question-${index}`
+            }
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
@@ -156,12 +162,13 @@ export default function BankQuestions() {
                 question={q}
                 index={index}
                 onPress={() => {
+                  if (q?.id == null) return;
                   router.push({
                     pathname: "/bank/[subject]/[subcategory]/[questionId]",
                     params: {
                       subject,
                       subcategory,
-                      questionId: q.id.toString(),
+                      questionId: String(q.id),
                     },
                   });
                 }}
