@@ -7,44 +7,26 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 
-const REQUIRED_TEST_SESSION_COLUMNS = new Set(["topic", "test_type"]);
-const REQUIRED_USER_ANSWER_COLUMNS = new Set([
-  "answered_at",
-  "seconds_spend",
-  "correct_option",
-]);
-
-type TableInfoRow = {
-  name?: string;
-};
-
-async function hasRequiredColumns(
-  db: ReturnType<typeof useSQLiteContext>,
-  tableName: string,
-  requiredColumns: Set<string>,
-) {
-  const rows = (await db.getAllAsync(
-    `PRAGMA table_info(${tableName});`,
-  )) as TableInfoRow[];
-  const existing = new Set(
-    rows
-      .map((row) => row?.name)
-      .filter((columnName): columnName is string => Boolean(columnName)),
-  );
-  return [...requiredColumns].every((column) => existing.has(column));
-}
-
 async function ensureColumn(
   db: ReturnType<typeof useSQLiteContext>,
   tableName: string,
   columnName: string,
   columnDefinition: string,
 ) {
-  const hasColumn = await hasRequiredColumns(db, tableName, new Set([columnName]));
-  if (hasColumn) return;
-  await db.runAsync(
-    `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`,
-  );
+  try {
+    await db.runAsync(
+      `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`,
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message.toLowerCase() : "";
+    const isDuplicateColumn =
+      message.includes("duplicate column name") ||
+      message.includes("already exists");
+
+    if (!isDuplicateColumn) {
+      throw error;
+    }
+  }
 }
 
 async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
@@ -148,23 +130,10 @@ function useNativeDrizzle() {
     setMigrationError(undefined);
 
     repairNativeSchema(db)
-      .then(async () => {
-        const [hasSessionColumns, hasAnswerColumns] = await Promise.all([
-          hasRequiredColumns(db, "test_sessions", REQUIRED_TEST_SESSION_COLUMNS),
-          hasRequiredColumns(db, "user_answers", REQUIRED_USER_ANSWER_COLUMNS),
-        ]);
-
+      .then(() => {
         if (isCancelled) return;
-
-        if (hasSessionColumns && hasAnswerColumns) {
-          setMigrationSuccess(true);
-          setMigrationError(undefined);
-          return;
-        }
-
-        setMigrationError(
-          new Error("Native database schema is missing required columns."),
-        );
+        setMigrationSuccess(true);
+        setMigrationError(undefined);
       })
       .catch((error: unknown) => {
         if (isCancelled) return;
