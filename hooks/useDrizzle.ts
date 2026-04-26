@@ -9,6 +9,33 @@ import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import migrations from "../drizzle/migrations";
 
+const REQUIRED_TEST_SESSION_COLUMNS = new Set(["topic", "test_type"]);
+const REQUIRED_USER_ANSWER_COLUMNS = new Set([
+  "answered_at",
+  "seconds_spend",
+  "correct_option",
+]);
+
+type TableInfoRow = {
+  name?: string;
+};
+
+async function hasRequiredColumns(
+  db: ReturnType<typeof useSQLiteContext>,
+  tableName: string,
+  requiredColumns: Set<string>,
+) {
+  const rows = (await db.getAllAsync(
+    `PRAGMA table_info(${tableName});`,
+  )) as TableInfoRow[];
+  const existing = new Set(
+    rows
+      .map((row) => row?.name)
+      .filter((columnName): columnName is string => Boolean(columnName)),
+  );
+  return [...requiredColumns].every((column) => existing.has(column));
+}
+
 function useWebDrizzle() {
   const [migrationSuccess, setMigrationSuccess] = useState(false);
   const [migrationError, setMigrationError] = useState<Error | undefined>(
@@ -74,17 +101,45 @@ function useNativeDrizzle() {
         }
       })
       .catch((error: unknown) => {
-        if (!isCancelled) {
-          setMigrationError(
-            error instanceof Error ? error : new Error(String(error)),
-          );
-        }
+        Promise.all([
+          hasRequiredColumns(
+            db,
+            "test_sessions",
+            REQUIRED_TEST_SESSION_COLUMNS,
+          ),
+          hasRequiredColumns(
+            db,
+            "user_answers",
+            REQUIRED_USER_ANSWER_COLUMNS,
+          ),
+        ])
+          .then(([hasSessionColumns, hasAnswerColumns]) => {
+            if (isCancelled) return;
+
+            if (hasSessionColumns && hasAnswerColumns) {
+              setMigrationSuccess(true);
+              setMigrationError(undefined);
+              return;
+            }
+
+            setMigrationError(
+              error instanceof Error ? error : new Error(String(error)),
+            );
+          })
+          .catch((schemaCheckError: unknown) => {
+            if (isCancelled) return;
+            setMigrationError(
+              schemaCheckError instanceof Error
+                ? schemaCheckError
+                : new Error(String(schemaCheckError)),
+            );
+          });
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [drizzleDb]);
+  }, [db, drizzleDb]);
 
   return { drizzleDb, migrationSuccess, migrationError };
 }
