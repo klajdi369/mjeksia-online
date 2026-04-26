@@ -1,5 +1,14 @@
 import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
+
+const isWeb = Platform.OS === "web";
+
+function hapticImpact(style: Haptics.ImpactFeedbackStyle) {
+  if (!isWeb) {
+    Haptics.impactAsync(style);
+  }
+}
 
 interface UseCountdownTimerOptions {
   totalSeconds: number;
@@ -56,7 +65,7 @@ export const useCountdownTimer = ({
         const newValue = s - 1;
 
         if (newValue >= 1 && newValue <= hapticCountdownSeconds) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          hapticImpact(Haptics.ImpactFeedbackStyle.Heavy);
         }
 
         onTickRef.current?.(newValue);

@@ -76,26 +76,23 @@ export async function getOverallStatistics(db: DbType) {
 }
 
 export async function getAllTestSessions(db: DbType) {
-  return await db.query.testSessions.findMany({
-    orderBy: desc(testSessions.createdAt),
-    with: {
-      // we might not have relations defined, let's keep it simple
-    },
-  });
-}
-
-// We'll define relations in schema.ts if needed, but for now we can just select direct.
-export async function getTestSessionsSimple(db: DbType) {
   return await db
     .select()
     .from(testSessions)
     .orderBy(desc(testSessions.createdAt));
 }
 
+export async function getTestSessionsSimple(db: DbType) {
+  return await getAllTestSessions(db);
+}
+
 export async function getTestSessionDetails(db: DbType, sessionId: number) {
-  const session = await db.query.testSessions.findFirst({
-    where: eq(testSessions.id, sessionId),
-  });
+  const rows = await db
+    .select()
+    .from(testSessions)
+    .where(eq(testSessions.id, sessionId))
+    .limit(1);
+  const session = rows[0];
 
   if (!session) return null;
 
