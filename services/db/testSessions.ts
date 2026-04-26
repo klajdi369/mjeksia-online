@@ -21,11 +21,13 @@ type QuestionData = {
 };
 
 export async function getRecentTests(db: DbType, amount: number) {
-  return await db
+  const safeAmount = Math.max(0, Math.floor(amount));
+  const rows = await db
     .select()
     .from(testSessions)
-    .orderBy(desc(testSessions.createdAt))
-    .limit(amount);
+    .orderBy(desc(testSessions.createdAt));
+
+  return rows.slice(0, safeAmount);
 }
 
 export async function insertTestSession(
