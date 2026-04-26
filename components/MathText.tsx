@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   Text,
+  View,
   useWindowDimensions,
   type TextStyle,
 } from "react-native";
@@ -105,10 +106,10 @@ const MathText = ({
   }, [mathPieces, drizzleDb]);
 
   const scalePx = fontSize * EX_RATIO;
+  const availableWidth = windowWidth - paddingHorizontal;
 
   // Calculate the width of the widest SVG
   const maxContentWidth = useMemo(() => {
-    const availableWidth = windowWidth - paddingHorizontal;
     let widestSvg = 0;
 
     mathPieces.forEach((piece) => {
@@ -120,26 +121,21 @@ const MathText = ({
 
     // The text box should be at least the screen width, or the width of the largest SVG
     return Math.max(availableWidth, widestSvg);
-  }, [mathPieces, svgDataMap, scalePx, windowWidth, paddingHorizontal]);
+  }, [mathPieces, svgDataMap, scalePx, availableWidth]);
 
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={true}
-      contentContainerStyle={{ minWidth: "100%", paddingBottom: 2 }}
+  const textNode = (
+    <Text
+      className={className}
+      style={[
+        style,
+        {
+          width: maxContentWidth, // Forces the wrap boundary to the widest element
+          fontSize: fontSize,
+          color: color,
+        },
+      ]}
     >
-      <Text
-        className={className}
-        style={[
-          style,
-          {
-            width: maxContentWidth, // Forces the wrap boundary to the widest element
-            fontSize: fontSize,
-            color: color,
-          },
-        ]}
-      >
-        {mathPieces.map((piece) => {
+      {mathPieces.map((piece) => {
           if (!piece.isMath) {
             return piece.content;
           }
@@ -176,7 +172,20 @@ const MathText = ({
             />
           );
         })}
-      </Text>
+    </Text>
+  );
+
+  if (maxContentWidth <= availableWidth) {
+    return <View>{textNode}</View>;
+  }
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ minWidth: "100%", paddingBottom: 2 }}
+    >
+      {textNode}
     </ScrollView>
   );
 };
