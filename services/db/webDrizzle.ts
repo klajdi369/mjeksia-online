@@ -3,12 +3,22 @@ import { drizzle } from "drizzle-orm/sqlite-proxy";
 import { deserializeDatabaseAsync, type SQLiteDatabase } from "expo-sqlite";
 import { Asset } from "expo-asset";
 
-let dbPromise: Promise<SQLiteDatabase> | null = null;
+declare global {
+  // Keep a single web SQLite connection across Fast Refresh/module reloads.
+  // eslint-disable-next-line no-var
+  var __mjeksiaWebDbPromise: Promise<SQLiteDatabase> | undefined;
+}
+
+const getCachedDbPromise = () => globalThis.__mjeksiaWebDbPromise;
+const setCachedDbPromise = (promise: Promise<SQLiteDatabase>) => {
+  globalThis.__mjeksiaWebDbPromise = promise;
+};
 
 async function getWebSQLiteDatabase() {
-  if (dbPromise) return dbPromise;
+  const cachedPromise = getCachedDbPromise();
+  if (cachedPromise) return cachedPromise;
 
-  dbPromise = (async () => {
+  const nextPromise = (async () => {
     const asset = await Asset.fromModule(require("@/assets/data.db")).downloadAsync();
 
     if (!asset.localUri) {
@@ -24,7 +34,13 @@ async function getWebSQLiteDatabase() {
     return deserializeDatabaseAsync(bytes);
   })();
 
-  return dbPromise;
+  setCachedDbPromise(
+    nextPromise.catch((error) => {
+      globalThis.__mjeksiaWebDbPromise = undefined;
+      throw error;
+    }),
+  );
+  return getCachedDbPromise()!;
 }
 
 export const webDrizzleDb = drizzle(
