@@ -7,6 +7,9 @@ declare global {
   // Keep a single web SQLite connection across Fast Refresh/module reloads.
   // eslint-disable-next-line no-var
   var __mjeksiaWebDbPromise: Promise<SQLiteDatabase> | undefined;
+  // Ensure schema bootstrap runs even when DB promise already exists.
+  // eslint-disable-next-line no-var
+  var __mjeksiaWebDbReadyPromise: Promise<SQLiteDatabase> | undefined;
 }
 
 const getCachedDbPromise = () => globalThis.__mjeksiaWebDbPromise;
@@ -45,34 +48,45 @@ async function ensureWebAppTables(db: SQLiteDatabase) {
 }
 
 async function getWebSQLiteDatabase() {
-  const cachedPromise = getCachedDbPromise();
-  if (cachedPromise) return cachedPromise;
+  if (globalThis.__mjeksiaWebDbReadyPromise) {
+    return globalThis.__mjeksiaWebDbReadyPromise;
+  }
 
-  const nextPromise = (async () => {
-    const asset = await Asset.fromModule(require("@/assets/data.db")).downloadAsync();
+  const readyPromise = (async () => {
+    const cachedPromise = getCachedDbPromise();
+    const db =
+      (await cachedPromise) ??
+      (await (async () => {
+        const asset = await Asset.fromModule(require("@/assets/data.db")).downloadAsync();
 
-    if (!asset.localUri) {
-      throw new Error("Failed to resolve bundled questions database asset.");
-    }
+        if (!asset.localUri) {
+          throw new Error("Failed to resolve bundled questions database asset.");
+        }
 
-    const response = await fetch(asset.localUri);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch bundled DB asset: ${response.statusText}`);
-    }
+        const response = await fetch(asset.localUri);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch bundled DB asset: ${response.statusText}`,
+          );
+        }
 
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    const db = await deserializeDatabaseAsync(bytes);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        const openedDb = await deserializeDatabaseAsync(bytes);
+        setCachedDbPromise(Promise.resolve(openedDb));
+        return openedDb;
+      })());
+
     await ensureWebAppTables(db);
     return db;
   })();
 
-  setCachedDbPromise(
-    nextPromise.catch((error) => {
-      globalThis.__mjeksiaWebDbPromise = undefined;
-      throw error;
-    }),
-  );
-  return getCachedDbPromise()!;
+  globalThis.__mjeksiaWebDbReadyPromise = readyPromise.catch((error) => {
+    globalThis.__mjeksiaWebDbReadyPromise = undefined;
+    globalThis.__mjeksiaWebDbPromise = undefined;
+    throw error;
+  });
+
+  return globalThis.__mjeksiaWebDbReadyPromise;
 }
 
 export const webDrizzleDb = drizzle(
