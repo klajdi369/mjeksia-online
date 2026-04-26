@@ -49,13 +49,34 @@ export const webDrizzleDb = drizzle(
     const statement = await db.prepareAsync(query);
 
     try {
-      const result = Array.isArray(params)
-        ? await statement.executeAsync(...params)
-        : params && typeof params === "object"
-          ? await statement.executeAsync(params as Record<string, any>)
-          : typeof params === "undefined"
-            ? await statement.executeAsync([])
-            : await statement.executeAsync(params as any);
+      const executeWithBoundParams = async () => {
+        if (Array.isArray(params)) {
+          return await statement.executeAsync(...params);
+        }
+
+        if (params && typeof params === "object") {
+          const entries = Object.entries(params);
+          const hasOnlyNumericKeys =
+            entries.length > 0 && entries.every(([key]) => /^\d+$/.test(key));
+
+          if (hasOnlyNumericKeys) {
+            const orderedValues = entries
+              .sort(([a], [b]) => Number(a) - Number(b))
+              .map(([, value]) => value as any);
+            return await statement.executeAsync(...orderedValues);
+          }
+
+          return await statement.executeAsync(params as Record<string, any>);
+        }
+
+        if (typeof params === "undefined") {
+          return await statement.executeAsync([]);
+        }
+
+        return await statement.executeAsync(params as any);
+      };
+
+      const result = await executeWithBoundParams();
 
       if (method === "run") {
         return { rows: [] };
