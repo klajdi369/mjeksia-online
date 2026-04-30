@@ -25,8 +25,6 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [sqliteError, setSqliteError] = useState<Error | null>(null);
   const hasHiddenSplash = useRef(false);
-  const isWeb = Platform.OS === ("web" as typeof Platform.OS);
-
   const databaseName = "questions.db";
 
   // Initialize global settings effects (e.g., Theme propagation)
@@ -82,20 +80,16 @@ export default function RootLayout() {
           translucent={false}
           backgroundColor={getThemeColor("--background", scheme, theme)}
         />
-        {isWeb ? (
+        <SQLiteProvider
+          databaseName={databaseName}
+          assetSource={{
+            assetId: require("@/assets/data.db"),
+          }}
+          onError={setSqliteError}
+        >
+          {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
           <Content scheme={scheme} theme={theme} />
-        ) : (
-          <SQLiteProvider
-            databaseName={databaseName}
-            assetSource={{
-              assetId: require("@/assets/data.db"),
-            }}
-            onError={setSqliteError}
-          >
-            {__DEV__ && Platform.OS !== "web" ? <DrizzleStudioDevtools /> : null}
-            <Content scheme={scheme} theme={theme} />
-          </SQLiteProvider>
-        )}
+        </SQLiteProvider>
       </View>
     </SafeAreaProvider>
   );
