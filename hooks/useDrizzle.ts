@@ -22,22 +22,41 @@ async function ensureColumn(
   columnName: string,
   columnDefinition: string,
 ) {
+  const alter = async (definition: string) =>
+    db.runAsync(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition};`);
+
   try {
-    await db.runAsync(
-      `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`,
-    );
+    await alter(columnDefinition);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message.toLowerCase() : "";
     const isDuplicateColumn =
       message.includes("duplicate column name") ||
       message.includes("already exists");
 
-    if (!isDuplicateColumn) {
-      throw wrapDbError(
-        `Failed to add column '${columnName}' on table '${tableName}'`,
-        error,
-      );
+    if (isDuplicateColumn) return;
+
+    const cannotAddNotNull =
+      message.includes("cannot add a not null") &&
+      columnDefinition.toLowerCase().includes("not null");
+
+    if (cannotAddNotNull) {
+      const relaxedDefinition = columnDefinition
+        .replace(/\s+not\s+null/gi, "")
+        .replace(/\s+default\s+['"][^'"]*['"]/gi, "")
+        .trim();
+
+      try {
+        await alter(relaxedDefinition);
+        return;
+      } catch {
+        // Fall through and throw the original error for better context.
+      }
     }
+
+    throw wrapDbError(
+      `Failed to add column '${columnName}' on table '${tableName}'`,
+      error,
+    );
   }
 }
 
