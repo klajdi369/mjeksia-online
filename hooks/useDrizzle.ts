@@ -1,11 +1,9 @@
 // hooks/useDrizzle.ts
 import * as schema from "@/services/db/schema";
 import type { DbType } from "@/services/db/types";
-import { initializeWebDb, webDrizzleDb } from "@/services/db/webDrizzle";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
-import { Platform } from "react-native";
 
 function toErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -110,47 +108,6 @@ async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
   );
 }
 
-function useWebDrizzle() {
-  const [migrationSuccess, setMigrationSuccess] = useState(false);
-  const [migrationError, setMigrationError] = useState<Error | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    setMigrationSuccess(false);
-    setMigrationError(undefined);
-
-    initializeWebDb()
-      .then(({ success, error }) => {
-        if (isCancelled) return;
-        if (success) {
-          setMigrationSuccess(true);
-        } else {
-          setMigrationError(error);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!isCancelled) {
-          setMigrationError(
-            error instanceof Error ? error : new Error(String(error)),
-          );
-        }
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  return {
-    drizzleDb: webDrizzleDb as unknown as DbType,
-    migrationSuccess,
-    migrationError,
-  };
-}
-
 function useNativeDrizzle() {
   const db = useSQLiteContext();
   const [migrationSuccess, setMigrationSuccess] = useState(false);
@@ -189,7 +146,4 @@ function useNativeDrizzle() {
   return { drizzleDb, migrationSuccess, migrationError };
 }
 
-// Platform.OS is a compile-time constant, so selecting the hook at module load
-// time is safe and avoids a conditional hook call inside a render function.
-export const useDrizzle =
-  Platform.OS === "web" ? useWebDrizzle : useNativeDrizzle;
+export const useDrizzle = useNativeDrizzle;
