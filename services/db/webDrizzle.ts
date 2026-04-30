@@ -17,10 +17,27 @@ const setCachedDbPromise = (promise: Promise<SQLiteDatabase>) => {
   globalThis.__mjeksiaWebDbPromise = promise;
 };
 
+
+function isIgnorableDdlFinalizeError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const message = err.message.toLowerCase();
+  return message.includes("error finalizing statement");
+}
+
+async function safeRunDdl(db: SQLiteDatabase, sql: string) {
+  try {
+    await db.runAsync(sql);
+  } catch (error) {
+    if (isIgnorableDdlFinalizeError(error)) return;
+    throw error;
+  }
+}
+
 async function ensureWebAppTables(db: SQLiteDatabase) {
   // Use runAsync instead of execAsync because execAsync on web WASM can throw
   // SQLITE_DONE (101) "no more rows available" for DDL that produces no result set.
-  await db.runAsync(
+  await safeRunDdl(
+    db,
     `CREATE TABLE IF NOT EXISTS test_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
@@ -33,7 +50,8 @@ async function ensureWebAppTables(db: SQLiteDatabase) {
     );`,
   );
 
-  await db.runAsync(
+  await safeRunDdl(
+    db,
     `CREATE TABLE IF NOT EXISTS user_answers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       session_id INTEGER NOT NULL,
