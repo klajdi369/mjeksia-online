@@ -1,11 +1,9 @@
 // hooks/useDrizzle.ts
 import * as schema from "@/services/db/schema";
 import type { DbType } from "@/services/db/types";
-import { initializeWebDb, webDrizzleDb } from "@/services/db/webDrizzle";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
-import { Platform } from "react-native";
 
 function toErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -16,34 +14,69 @@ function wrapDbError(context: string, error: unknown) {
   return new Error(`${context}. SQLite error: ${toErrorMessage(error)}`);
 }
 
+
+function isIgnorableFinalizeError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return error.message.toLowerCase().includes("error finalizing statement");
+}
+
+async function runDdl(db: ReturnType<typeof useSQLiteContext>, sql: string) {
+  try {
+    await db.runAsync(sql);
+  } catch (error) {
+    if (isIgnorableFinalizeError(error)) return;
+    throw error;
+  }
+}
+
 async function ensureColumn(
   db: ReturnType<typeof useSQLiteContext>,
   tableName: string,
   columnName: string,
   columnDefinition: string,
 ) {
+  const alter = async (definition: string) =>
+    runDdl(db, `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition};`);
+
   try {
-    await db.runAsync(
-      `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition};`,
-    );
+    await alter(columnDefinition);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message.toLowerCase() : "";
     const isDuplicateColumn =
       message.includes("duplicate column name") ||
       message.includes("already exists");
 
-    if (!isDuplicateColumn) {
-      throw wrapDbError(
-        `Failed to add column '${columnName}' on table '${tableName}'`,
-        error,
-      );
+    if (isDuplicateColumn) return;
+
+    const cannotAddNotNull =
+      message.includes("cannot add a not null") &&
+      columnDefinition.toLowerCase().includes("not null");
+
+    if (cannotAddNotNull) {
+      const relaxedDefinition = columnDefinition
+        .replace(/\s+not\s+null/gi, "")
+        .replace(/\s+default\s+['"][^'"]*['"]/gi, "")
+        .trim();
+
+      try {
+        await alter(relaxedDefinition);
+        return;
+      } catch {
+        // Fall through and throw the original error for better context.
+      }
     }
+
+    throw wrapDbError(
+      `Failed to add column '${columnName}' on table '${tableName}'`,
+      error,
+    );
   }
 }
 
 async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
   try {
-    await db.runAsync(
+    await runDdl(
+      db,
       `CREATE TABLE IF NOT EXISTS test_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
@@ -60,7 +93,8 @@ async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
   }
 
   try {
-    await db.runAsync(
+    await runDdl(
+      db,
       `CREATE TABLE IF NOT EXISTS user_answers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id INTEGER NOT NULL,
@@ -89,47 +123,6 @@ async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
     "correct_option",
     "TEXT NOT NULL DEFAULT ''",
   );
-}
-
-function useWebDrizzle() {
-  const [migrationSuccess, setMigrationSuccess] = useState(false);
-  const [migrationError, setMigrationError] = useState<Error | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    setMigrationSuccess(false);
-    setMigrationError(undefined);
-
-    initializeWebDb()
-      .then(({ success, error }) => {
-        if (isCancelled) return;
-        if (success) {
-          setMigrationSuccess(true);
-        } else {
-          setMigrationError(error);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!isCancelled) {
-          setMigrationError(
-            error instanceof Error ? error : new Error(String(error)),
-          );
-        }
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  return {
-    drizzleDb: webDrizzleDb as unknown as DbType,
-    migrationSuccess,
-    migrationError,
-  };
 }
 
 function useNativeDrizzle() {
@@ -170,7 +163,4 @@ function useNativeDrizzle() {
   return { drizzleDb, migrationSuccess, migrationError };
 }
 
-// Platform.OS is a compile-time constant, so selecting the hook at module load
-// time is safe and avoids a conditional hook call inside a render function.
-export const useDrizzle =
-  Platform.OS === "web" ? useWebDrizzle : useNativeDrizzle;
+export const useDrizzle = useNativeDrizzle;

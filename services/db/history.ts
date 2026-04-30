@@ -14,18 +14,6 @@ function latestAnswersSubquery(db: DbType) {
 }
 
 export async function getOverallStatistics(db: DbType) {
-  // Aggregate data from testSessions
-  const sessionsResult = await db
-    .select({
-      totalTests: count(testSessions.id),
-      averageScore: avg(testSessions.score),
-      totalTimeSpentSeconds: sum(userAnswers.seconds_spend), // Joined via userAnswers
-    })
-    .from(testSessions)
-    .leftJoin(userAnswers, eq(testSessions.id, userAnswers.sessionId));
-
-  // The above join might duplicate totalTimeSpent if we aren't careful, actually let's calculate them separately for simplicity or correctly with group by.
-
   // Better approach:
   const sessionStats = await db
     .select({
