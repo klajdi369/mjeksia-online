@@ -14,6 +14,21 @@ function wrapDbError(context: string, error: unknown) {
   return new Error(`${context}. SQLite error: ${toErrorMessage(error)}`);
 }
 
+
+function isIgnorableFinalizeError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return error.message.toLowerCase().includes("error finalizing statement");
+}
+
+async function runDdl(db: ReturnType<typeof useSQLiteContext>, sql: string) {
+  try {
+    await db.runAsync(sql);
+  } catch (error) {
+    if (isIgnorableFinalizeError(error)) return;
+    throw error;
+  }
+}
+
 async function ensureColumn(
   db: ReturnType<typeof useSQLiteContext>,
   tableName: string,
@@ -21,7 +36,7 @@ async function ensureColumn(
   columnDefinition: string,
 ) {
   const alter = async (definition: string) =>
-    db.runAsync(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition};`);
+    runDdl(db, `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition};`);
 
   try {
     await alter(columnDefinition);
@@ -60,7 +75,8 @@ async function ensureColumn(
 
 async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
   try {
-    await db.runAsync(
+    await runDdl(
+      db,
       `CREATE TABLE IF NOT EXISTS test_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
@@ -77,7 +93,8 @@ async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
   }
 
   try {
-    await db.runAsync(
+    await runDdl(
+      db,
       `CREATE TABLE IF NOT EXISTS user_answers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id INTEGER NOT NULL,
