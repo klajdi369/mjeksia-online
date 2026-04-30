@@ -80,6 +80,27 @@ Yes! The system tracks your session history, giving you the ability to review pa
 **5. Where are the questions from?**
 The questions are gathered from the official question bank provided by [QSHA](https://qsha.gov.al/). You can view the official question bank [here](https://qsha.gov.al/provimi-i-informatizuar-i-mjekesise/).
 
+
+## Docker Development
+
+If you want to develop without installing all dependencies on your host machine, use Docker:
+
+```bash
+docker compose up --build
+```
+
+Then open Expo web at `http://localhost:8081`.
+
+### Useful container commands
+
+```bash
+# Install/update dependencies inside the container
+docker compose run --rm app pnpm install
+
+# Run lint inside the container
+docker compose run --rm app pnpm lint
+```
+
 ## How to Contribute
 
 All kinds of feedback and contributions are welcomed!
