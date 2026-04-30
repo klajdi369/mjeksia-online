@@ -4,6 +4,7 @@ import type { DbType } from "@/services/db/types";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useMemo, useState } from "react";
+import { Platform } from "react-native";
 
 function toErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -22,6 +23,58 @@ function isIgnorableFinalizeError(error: unknown): boolean {
       ? error.message.toLowerCase()
       : String(error).toLowerCase();
   return msg.includes("error finalizing statement");
+}
+
+// SQLITE_DONE (101) is the normal SQLite "no more rows" sentinel. On native,
+// expo-sqlite absorbs it internally. On web WASM, getAllAsync / getFirstAsync
+// can throw it as an actual error instead.
+function isSqliteDoneError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    msg.includes("101") ||
+    msg.toLowerCase().includes("no more rows") ||
+    msg.toLowerCase().includes("sqlite_done")
+  );
+}
+
+// Wrap the expo-sqlite database so that SQLITE_DONE errors from the web WASM
+// implementation are silently treated as "no rows" rather than propagating up
+// and being wrapped in a DrizzleQueryError.
+function patchWebDb(
+  db: ReturnType<typeof useSQLiteContext>,
+): ReturnType<typeof useSQLiteContext> {
+  if (Platform.OS !== "web") return db;
+
+  return new Proxy(db, {
+    get(target, prop) {
+      const value = (target as any)[prop];
+
+      if (prop === "getAllAsync" && typeof value === "function") {
+        return async (...args: any[]) => {
+          try {
+            return await (value as (...a: any[]) => any).apply(target, args);
+          } catch (err) {
+            if (isSqliteDoneError(err)) return [];
+            throw err;
+          }
+        };
+      }
+
+      if (prop === "getFirstAsync" && typeof value === "function") {
+        return async (...args: any[]) => {
+          try {
+            return await (value as (...a: any[]) => any).apply(target, args);
+          } catch (err) {
+            if (isSqliteDoneError(err)) return null;
+            throw err;
+          }
+        };
+      }
+
+      if (typeof value === "function") return value.bind(target);
+      return value;
+    },
+  });
 }
 
 async function runDdl(db: ReturnType<typeof useSQLiteContext>, sql: string) {
@@ -130,15 +183,19 @@ async function repairNativeSchema(db: ReturnType<typeof useSQLiteContext>) {
 }
 
 export function useDrizzle() {
-  const db = useSQLiteContext();
+  const rawDb = useSQLiteContext();
   const [migrationSuccess, setMigrationSuccess] = useState(false);
   const [migrationError, setMigrationError] = useState<Error | undefined>(
     undefined,
   );
 
-  const drizzleDb: DbType = useMemo(() => {
-    return drizzle(db, { schema });
-  }, [db]);
+  // patchWebDb is cheap (just creates a Proxy) and rawDb identity is stable.
+  const db = useMemo(() => patchWebDb(rawDb), [rawDb]);
+
+  const drizzleDb: DbType = useMemo(
+    () => drizzle(db as ReturnType<typeof useSQLiteContext>, { schema }),
+    [db],
+  );
 
   useEffect(() => {
     let isCancelled = false;
@@ -154,9 +211,7 @@ export function useDrizzle() {
       })
       .catch((error: unknown) => {
         if (isCancelled) return;
-        setMigrationError(
-          wrapDbError("Database bootstrap failed", error),
-        );
+        setMigrationError(wrapDbError("Database bootstrap failed", error));
       });
 
     return () => {
