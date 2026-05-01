@@ -37,3 +37,11 @@ done
 echo ""
 echo "=== WASM files in dist ==="
 find dist -name "*.wasm" -print
+
+# Bust the Service Worker cache on every deploy so clients pick up new assets
+# automatically without needing a manual unregister.
+BUILD_HASH=$(git rev-parse --short HEAD 2>/dev/null || date +%s)
+if [ -f "dist/sw.js" ]; then
+  sed -i "s|mjeksia-online-v1|mjeksia-online-${BUILD_HASH}|g" dist/sw.js
+  echo "SW cache busted: mjeksia-online-${BUILD_HASH}"
+fi
