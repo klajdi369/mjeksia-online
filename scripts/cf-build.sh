@@ -3,33 +3,37 @@ set -e
 
 pnpm exec expo export --platform web
 
-echo ""
-echo "=== WASM files in dist ==="
-find dist -name "*.wasm" -print
+WASM_SRC=$(find dist/assets -name "wa-sqlite*.wasm" | head -1)
+if [ -z "$WASM_SRC" ]; then
+  echo "ERROR: wa-sqlite WASM not found in dist/assets"
+  exit 1
+fi
+echo "WASM source: $WASM_SRC"
 
-echo ""
-echo "=== WASM URL references inside worker bundles ==="
-for f in $(find dist -name "worker-*.js"); do
-  echo "Worker: $f"
-  # Extract any string containing .wasm from the bundle
-  grep -oE '"[^"]{0,200}\.wasm[^"]{0,50}"' "$f" | head -10 || true
-  grep -oE "'[^']{0,200}\.wasm[^']{0,50}'" "$f" | head -10 || true
-done
+# Original path embedded in the worker by Metro
+WASM_ORIGINAL_PATH="/assets/node_modules/expo-sqlite/web/wa-sqlite/$(basename "$WASM_SRC")"
 
+# Safe destination — no node_modules in the URL
+WASM_SAFE_PATH="dist/assets/wa-sqlite.wasm"
+cp "$WASM_SRC" "$WASM_SAFE_PATH"
+echo "Copied WASM to $WASM_SAFE_PATH"
+
+# Also copy next to the worker for Emscripten's scriptDirectory fallback
 WORKER_DIR="dist/_expo/static/js/web"
 mkdir -p "$WORKER_DIR"
+cp "$WASM_SRC" "$WORKER_DIR/wa-sqlite.wasm"
+echo "Copied WASM to $WORKER_DIR/wa-sqlite.wasm"
 
-echo ""
-echo "=== Copying WASM to worker directory ==="
-while IFS= read -r src; do
-  if [ -n "$src" ]; then
-    base=$(basename "$src" | sed 's/\.[a-f0-9]\{32\}\.wasm$/.wasm/')
-    dest="$WORKER_DIR/$base"
-    cp "$src" "$dest"
-    echo "Copied: $src -> $dest"
+# Patch the worker bundle to use the safe path
+for f in $(find dist/_expo -name "worker-*.js"); do
+  if grep -q "$WASM_ORIGINAL_PATH" "$f"; then
+    sed -i "s|$WASM_ORIGINAL_PATH|/assets/wa-sqlite.wasm|g" "$f"
+    echo "Patched $f"
+  else
+    echo "WARNING: expected WASM path not found in $f"
   fi
-done < <(find dist/assets -name "*.wasm")
+done
 
 echo ""
-echo "=== All WASM files in dist after copy ==="
+echo "=== WASM files in dist ==="
 find dist -name "*.wasm" -print
