@@ -7,7 +7,7 @@ pnpm exec expo export --platform web
 # (_expo/static/js/web/), so we need the WASM there under its original name.
 WORKER_DIR="dist/_expo/static/js/web"
 mkdir -p "$WORKER_DIR"
-
+ 
 find dist/assets -name "wa-sqlite*.wasm" | while read -r src; do
   # Strip the content hash: wa-sqlite.abc123.wasm -> wa-sqlite.wasm
   base=$(basename "$src" | sed 's/\.[a-f0-9]\{32\}\.wasm$/.wasm/')
