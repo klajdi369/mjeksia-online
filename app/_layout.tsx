@@ -20,6 +20,64 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
+// expo-sqlite's WASM worker on web serializes query results to JSON without
+// escaping control characters (newlines, tabs, form feeds, etc.) that appear
+// in string column values. This monkey-patch fixes those strings before
+// JSON.parse sees them. It is a no-op for already-valid JSON.
+if (Platform.OS === "web") {
+  const _originalParse = JSON.parse;
+  // @ts-ignore – intentional global patch
+  JSON.parse = function patchedJsonParse(text: unknown, reviver?: unknown) {
+    if (typeof text === "string") {
+      text = repairJsonControlChars(text);
+    }
+    // @ts-ignore
+    return _originalParse.call(this, text, reviver);
+  };
+}
+
+function repairJsonControlChars(input: string): string {
+  let out = "";
+  let inStr = false;
+  let i = 0;
+  while (i < input.length) {
+    const c = input[i];
+    const code = input.charCodeAt(i);
+    if (inStr) {
+      if (c === "\\" && i + 1 < input.length) {
+        // copy escape sequence verbatim
+        out += c + input[i + 1];
+        i += 2;
+        continue;
+      }
+      if (c === '"') {
+        inStr = false;
+        out += c;
+        i++;
+        continue;
+      }
+      // bare control char inside a JSON string — must be escaped
+      if (code < 0x20) {
+        switch (code) {
+          case 0x08: out += "\\b"; break;
+          case 0x09: out += "\\t"; break;
+          case 0x0a: out += "\\n"; break;
+          case 0x0c: out += "\\f"; break;
+          case 0x0d: out += "\\r"; break;
+          default:   out += `\\u${code.toString(16).padStart(4, "0")}`; break;
+        }
+        i++;
+        continue;
+      }
+    } else if (c === '"') {
+      inStr = true;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
 export default function RootLayout() {
   const { scheme, theme, isDark } = useAppTheme();
   const [isReady, setIsReady] = useState(false);

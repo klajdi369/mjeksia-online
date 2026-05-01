@@ -19,8 +19,8 @@ const setCachedDbPromise = (promise: Promise<SQLiteDatabase>) => {
 
 
 function isIgnorableDdlFinalizeError(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  const message = err.message.toLowerCase();
+  const message =
+    err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
   return message.includes("error finalizing statement");
 }
 
