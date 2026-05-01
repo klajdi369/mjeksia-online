@@ -1,8 +1,11 @@
 /*.wasm
   Content-Type: application/wasm
 
-/sql-wasm.wasm
+/**/*.wasm
   Content-Type: application/wasm
 
 /*.worker.js
+  Content-Type: application/javascript
+
+/**/*.worker.js
   Content-Type: application/javascript
